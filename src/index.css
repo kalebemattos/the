@@ -1,0 +1,223 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* The Best of Angra Design System - Tropical Luxury */
+
+@layer base {
+  :root {
+    /* Base colors - Tropical Paradise Theme */
+    --background: 0 0% 100%;
+    --foreground: 210 15% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 210 15% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 15% 20%;
+
+    /* Ocean Blue - Primary color */
+    --primary: 200 85% 45%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 200 85% 65%;
+
+    /* Golden Sand - Secondary color */
+    --secondary: 45 85% 65%;
+    --secondary-foreground: 210 15% 20%;
+    --secondary-dark: 45 75% 55%;
+
+    /* Emerald Green - Accent color */
+    --accent: 165 70% 45%;
+    --accent-foreground: 0 0% 100%;
+    --accent-light: 165 70% 65%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 210 15% 45%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 20% 90%;
+    --input: 210 20% 90%;
+    --ring: 200 85% 45%;
+
+    --radius: 0.75rem;
+
+    /* Custom colors for tropical theme */
+    --ocean-deep: 200 90% 35%;
+    --tropical-teal: 180 70% 50%;
+    --sand-light: 45 90% 85%;
+    --palm-green: 140 60% 40%;
+
+    /* Gradients */
+    --gradient-ocean: linear-gradient(135deg, hsl(200, 85%, 45%), hsl(165, 70%, 45%));
+    --gradient-sunset: linear-gradient(135deg, hsl(45, 85%, 65%), hsl(200, 85%, 45%));
+    --gradient-tropical: linear-gradient(180deg, hsl(165, 70%, 45%), hsl(200, 85%, 45%));
+    --gradient-hero: linear-gradient(180deg, rgba(0,0,0,0.3), rgba(0,0,0,0.5));
+
+    /* Shadows */
+    --shadow-elegant: 0 10px 40px -10px hsl(200 85% 45% / 0.3);
+    --shadow-glow: 0 0 60px hsl(200 85% 65% / 0.4);
+    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+    /* Animations */
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .dark {
+    --background: 210 20% 8%;
+    --foreground: 0 0% 98%;
+    --card: 210 20% 12%;
+    --card-foreground: 0 0% 98%;
+    --primary: 200 85% 55%;
+    --primary-foreground: 210 20% 8%;
+    --secondary: 45 85% 70%;
+    --accent: 165 70% 55%;
+    --muted: 210 20% 15%;
+    --muted-foreground: 210 15% 65%;
+    --border: 210 20% 20%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+    scroll-behavior: smooth;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+  }
+
+  /* Smooth scroll with offset for fixed headers */
+  html {
+    scroll-padding-top: 80px;
+  }
+}
+
+@layer components {
+  /* Hero text styling */
+  .hero-title {
+    @apply text-5xl md:text-7xl font-bold text-white;
+    font-family: 'Playfair Display', serif;
+    text-shadow: 2px 4px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  .hero-subtitle {
+    @apply text-lg md:text-xl text-white/90;
+    text-shadow: 1px 2px 10px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Section titles */
+  .section-title {
+    @apply text-3xl md:text-5xl font-bold text-foreground mb-4;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .section-subtitle {
+    @apply text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto;
+  }
+
+  /* Card hover effects */
+  .hover-lift {
+    @apply transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-ocean);
+  }
+
+  /* Decorative separator */
+  .separator-line {
+    @apply flex items-center justify-center my-8;
+  }
+
+  .separator-line::before,
+  .separator-line::after {
+    content: '';
+    @apply flex-1 border-t border-border;
+  }
+
+  .separator-line span {
+    @apply px-4 text-muted-foreground;
+  }
+}
+
+@layer utilities {
+  /* Background gradients */
+  .bg-gradient-ocean {
+    background: var(--gradient-ocean);
+  }
+
+  .bg-gradient-sunset {
+    background: var(--gradient-sunset);
+  }
+
+  .bg-gradient-tropical {
+    background: var(--gradient-tropical);
+  }
+
+  .bg-gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  /* Glass morphism */
+  .glass {
+    @apply backdrop-blur-md bg-white/80 border border-white/20;
+  }
+
+  .glass-dark {
+    @apply backdrop-blur-md bg-black/40 border border-white/10;
+  }
+
+  /* Animations */
+  .animate-fade-in-up {
+    animation: fadeInUp 0.8s ease-out forwards;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.5s ease-out forwards;
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
