@@ -26,34 +26,10 @@ export function Packages() {
   ];
 
   const extras = [
-    { 
-      id: 'diving',
-      namePt: 'Mergulho Subaquático',
-      nameEn: 'Scuba Diving',
-      nameEs: 'Buceo Submarino',
-      price: 150
-    },
-    { 
-      id: 'rio',
-      namePt: 'Cristo Redentor & Pão de Açúcar',
-      nameEn: 'Christ the Redeemer & Sugarloaf',
-      nameEs: 'Cristo Redentor y Pan de Azúcar',
-      price: 200
-    },
-    { 
-      id: 'aquarium',
-      namePt: 'AquaRio / BioParque',
-      nameEn: 'AquaRio / BioParque',
-      nameEs: 'AquaRio / BioParque',
-      price: 100
-    },
-    { 
-      id: 'paragliding',
-      namePt: 'Voo de Parapente',
-      nameEn: 'Paragliding Flight',
-      nameEs: 'Vuelo de Parapente',
-      price: 250
-    },
+    { id: 'diving', namePt: 'Mergulho Subaquático', nameEn: 'Scuba Diving', nameEs: 'Buceo Submarino', price: 150 },
+    { id: 'rio', namePt: 'Cristo Redentor & Pão de Açúcar', nameEn: 'Christ the Redeemer & Sugarloaf', nameEs: 'Cristo Redentor y Pan de Azúcar', price: 200 },
+    { id: 'aquarium', namePt: 'AquaRio / BioParque', nameEn: 'AquaRio / BioParque', nameEs: 'AquaRio / BioParque', price: 100 },
+    { id: 'paragliding', namePt: 'Voo de Parapente', nameEn: 'Paragliding Flight', nameEs: 'Vuelo de Parapente', price: 250 },
   ];
 
   const selectedPackage = packages.find(p => p.people === selectedPeople) || packages[0];
@@ -71,20 +47,49 @@ export function Packages() {
     );
   };
 
+  // --- ALTERAÇÃO COMPLETA DO HANDLEBOOKING ---
   const handleBooking = () => {
-    const dateText = checkInDate 
+    const dateText = checkInDate
       ? format(checkInDate, 'dd/MM/yyyy')
       : t('(data a definir)', '(date to be defined)', '(fecha por definir)');
-    
+
+    const selectedExtrasText =
+      selectedExtras.length > 0
+        ? extras
+            .filter(e => selectedExtras.includes(e.id))
+            .map(e => `${t(e.namePt, e.nameEn, e.nameEs)} (€${e.price})`)
+            .join(', ')
+        : t('Nenhum extra selecionado', 'No extras selected', 'Ningún extra seleccionado');
+
     const message = t(
-      `Olá! Gostaria de reservar o pacote para ${selectedPeople} pessoa(s). Data de check-in: ${dateText}. Total: €${totalPrice}`,
-      `Hello! I would like to book the package for ${selectedPeople} person(s). Check-in date: ${dateText}. Total: €${totalPrice}`,
-      `¡Hola! Me gustaría reservar el paquete para ${selectedPeople} persona(s). Fecha de check-in: ${dateText}. Total: €${totalPrice}`
+      // PT
+      `Olá! Gostaria de reservar o pacote.\n\n` +
+      `📅 Data de check-in: ${dateText}\n` +
+      `👥 Número de pessoas: ${selectedPeople}\n` +
+      `✨ Experiências extras: ${selectedExtrasText}\n` +
+      `💶 Valor total: €${totalPrice}\n\n` +
+      `Pode verificar a disponibilidade?`,
+
+      // EN
+      `Hello! I would like to book the package.\n\n` +
+      `📅 Check-in date: ${dateText}\n` +
+      `👥 Number of people: ${selectedPeople}\n` +
+      `✨ Extra experiences: ${selectedExtrasText}\n` +
+      `💶 Total price: €${totalPrice}\n\n` +
+      `Can you confirm availability?`,
+
+      // ES
+      `¡Hola! Me gustaría reservar el paquete.\n\n` +
+      `📅 Fecha de check-in: ${dateText}\n` +
+      `👥 Número de personas: ${selectedPeople}\n` +
+      `✨ Experiencias extras: ${selectedExtrasText}\n` +
+      `💶 Precio total: €${totalPrice}\n\n` +
+      `¿Puede confirmar disponibilidad?`
     );
-    
+
     const whatsappUrl = `https://wa.me/5524999880848?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
-    
+
     toast.success(
       t(
         'Redirecionando para WhatsApp...',
@@ -93,6 +98,7 @@ export function Packages() {
       )
     );
   };
+  // --- FIM DAS ALTERAÇÕES ---
 
   return (
     <section id="packages" className="py-20 bg-background">
@@ -114,7 +120,7 @@ export function Packages() {
               <Users className="w-6 h-6 text-primary" />
               {t('Selecione o Número de Pessoas', 'Select Number of People', 'Seleccione el Número de Personas')}
             </h3>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               {packages.map((pkg) => (
                 <button
@@ -127,14 +133,16 @@ export function Packages() {
                   }`}
                 >
                   <div className="text-center">
-                    <Users className={`w-8 h-8 mx-auto mb-2 ${
-                      selectedPeople === pkg.people ? 'text-primary' : 'text-muted-foreground'
-                    }`} />
+                    <Users
+                      className={`w-8 h-8 mx-auto mb-2 ${
+                        selectedPeople === pkg.people ? 'text-primary' : 'text-muted-foreground'
+                      }`}
+                    />
                     <p className="font-semibold text-lg mb-1">
-                      {pkg.people} {pkg.people === 1 
+                      {pkg.people}{' '}
+                      {pkg.people === 1
                         ? t('pessoa', 'person', 'persona')
-                        : t('pessoas', 'people', 'personas')
-                      }
+                        : t('pessoas', 'people', 'personas')}
                     </p>
                     <p className="text-2xl font-bold text-primary">€{pkg.price}</p>
                   </div>
@@ -149,14 +157,14 @@ export function Packages() {
               <CalendarIcon className="w-6 h-6 text-accent" />
               {t('Data de Check-in', 'Check-in Date', 'Fecha de Check-in')}
             </h3>
-            
+
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full md:w-[300px] justify-start text-left font-normal",
-                    !checkInDate && "text-muted-foreground"
+                    'w-full md:w-[300px] justify-start text-left font-normal',
+                    !checkInDate && 'text-muted-foreground'
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
@@ -167,6 +175,7 @@ export function Packages() {
                   )}
                 </Button>
               </PopoverTrigger>
+
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
@@ -180,12 +189,12 @@ export function Packages() {
             </Popover>
           </Card>
 
-          {/* Opcionais */}
+          {/* Extras */}
           <Card className="p-8 mb-8 border-accent/20">
             <h3 className="text-xl font-semibold mb-6">
               {t('Adicione Experiências Extras', 'Add Extra Experiences', 'Añade Experiencias Extras')}
             </h3>
-            
+
             <div className="space-y-4">
               {extras.map((extra) => (
                 <div
@@ -212,7 +221,7 @@ export function Packages() {
             </div>
           </Card>
 
-          {/* Resumo e Booking */}
+          {/* Resumo */}
           <Card className="p-8 bg-gradient-sunset border-none text-white">
             <div className="flex flex-col md:flex-row justify-between items-center gap-6">
               <div>
@@ -224,10 +233,10 @@ export function Packages() {
                   {totalPrice}
                 </div>
                 <p className="text-white/80 mt-2">
-                  {selectedPeople} {selectedPeople === 1 
+                  {selectedPeople}{' '}
+                  {selectedPeople === 1
                     ? t('pessoa', 'person', 'persona')
-                    : t('pessoas', 'people', 'personas')
-                  }
+                    : t('pessoas', 'people', 'personas')}
                   {selectedExtras.length > 0 && ` + ${selectedExtras.length} ${t('extras', 'extras', 'extras')}`}
                 </p>
               </div>
@@ -253,6 +262,7 @@ export function Packages() {
                     )}
                   </p>
                 </div>
+
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <p>
@@ -263,6 +273,7 @@ export function Packages() {
                     )}
                   </p>
                 </div>
+
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <p>
