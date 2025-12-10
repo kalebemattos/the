@@ -86,14 +86,14 @@ export function Packages() {
       namePt: 'Cristo Redentor & Pão de Açúcar',
       nameEn: 'Christ the Redeemer & Sugarloaf',
       nameEs: 'Cristo Redentor y Pan de Azúcar',
-      price: 200
+      price: 350
     },
     { 
       id: 'aquarium',
       namePt: 'AquaRio / BioParque',
       nameEn: 'AquaRio / BioParque',
       nameEs: 'AquaRio / BioParque',
-      price: 100
+      price: 350
     },
     { 
       id: 'paragliding',
