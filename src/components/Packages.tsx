@@ -6,16 +6,64 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Users, Check, Euro, Calendar as CalendarIcon } from 'lucide-react';
+import { Users, Check, Euro, Calendar as CalendarIcon, Home, Waves, Bath, Sofa } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+
+const houses = [
+  {
+    id: 'casa-101',
+    name: 'Casa 101',
+    taglinePt: 'O Canto do Relaxamento',
+    taglineEn: 'The Relaxation Corner',
+    taglineEs: 'El Rincón del Relax',
+    highlightPt: 'Banheira de Hidromassagem',
+    highlightEn: 'Hot Tub',
+    highlightEs: 'Bañera de Hidromasaje',
+    icon: Bath,
+  },
+  {
+    id: 'casa-102',
+    name: 'Casa 102',
+    taglinePt: 'Piscina Privativa',
+    taglineEn: 'Private Pool',
+    taglineEs: 'Piscina Privada',
+    highlightPt: 'Piscina com Hidromassagem',
+    highlightEn: 'Pool with Hydromassage',
+    highlightEs: 'Piscina con Hidromasaje',
+    icon: Waves,
+  },
+  {
+    id: 'casa-201',
+    name: 'Casa 201',
+    taglinePt: 'Tranquilidade Superior',
+    taglineEn: 'Upper Floor Tranquility',
+    taglineEs: 'Tranquilidad Superior',
+    highlightPt: 'Sacada Privativa',
+    highlightEn: 'Private Balcony',
+    highlightEs: 'Balcón Privado',
+    icon: Sofa,
+  },
+  {
+    id: 'casa-202',
+    name: 'Casa 202',
+    taglinePt: 'Conforto e Calmaria',
+    taglineEn: 'Comfort & Serenity',
+    taglineEs: 'Confort y Calma',
+    highlightPt: 'Sacada Privativa',
+    highlightEn: 'Private Balcony',
+    highlightEs: 'Balcón Privado',
+    icon: Sofa,
+  },
+];
 
 export function Packages() {
   const { t } = useLanguage();
   const [selectedPeople, setSelectedPeople] = useState<number>(1);
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
   const [checkInDate, setCheckInDate] = useState<Date>();
+  const [selectedHouse, setSelectedHouse] = useState<string>('casa-101');
 
   const packages = [
     { people: 1, price: 3000 },
@@ -26,10 +74,34 @@ export function Packages() {
   ];
 
   const extras = [
-    { id: 'diving', namePt: 'Mergulho Subaquático', nameEn: 'Scuba Diving', nameEs: 'Buceo Submarino', price: 150 },
-    { id: 'rio', namePt: 'Cristo Redentor & Pão de Açúcar', nameEn: 'Christ the Redeemer & Sugarloaf', nameEs: 'Cristo Redentor y Pan de Azúcar', price: 200 },
-    { id: 'aquarium', namePt: 'AquaRio / BioParque', nameEn: 'AquaRio / BioParque', nameEs: 'AquaRio / BioParque', price: 100 },
-    { id: 'paragliding', namePt: 'Voo de Parapente', nameEn: 'Paragliding Flight', nameEs: 'Vuelo de Parapente', price: 250 },
+    { 
+      id: 'diving',
+      namePt: 'Mergulho Subaquático',
+      nameEn: 'Scuba Diving',
+      nameEs: 'Buceo Submarino',
+      price: 150
+    },
+    { 
+      id: 'rio',
+      namePt: 'Cristo Redentor & Pão de Açúcar',
+      nameEn: 'Christ the Redeemer & Sugarloaf',
+      nameEs: 'Cristo Redentor y Pan de Azúcar',
+      price: 200
+    },
+    { 
+      id: 'aquarium',
+      namePt: 'AquaRio / BioParque',
+      nameEn: 'AquaRio / BioParque',
+      nameEs: 'AquaRio / BioParque',
+      price: 100
+    },
+    { 
+      id: 'paragliding',
+      namePt: 'Voo de Parapente',
+      nameEn: 'Paragliding Flight',
+      nameEs: 'Vuelo de Parapente',
+      price: 250
+    },
   ];
 
   const selectedPackage = packages.find(p => p.people === selectedPeople) || packages[0];
@@ -47,49 +119,27 @@ export function Packages() {
     );
   };
 
-  // --- ALTERAÇÃO COMPLETA DO HANDLEBOOKING ---
+  const selectedHouseData = houses.find(h => h.id === selectedHouse);
+
   const handleBooking = () => {
-    const dateText = checkInDate
+    const dateText = checkInDate 
       ? format(checkInDate, 'dd/MM/yyyy')
       : t('(data a definir)', '(date to be defined)', '(fecha por definir)');
-
-    const selectedExtrasText =
-      selectedExtras.length > 0
-        ? extras
-            .filter(e => selectedExtras.includes(e.id))
-            .map(e => `${t(e.namePt, e.nameEn, e.nameEs)} (€${e.price})`)
-            .join(', ')
-        : t('Nenhum extra selecionado', 'No extras selected', 'Ningún extra seleccionado');
-
+    
+    const houseName = selectedHouseData?.name || 'Casa 101';
+    const houseTagline = selectedHouseData 
+      ? t(selectedHouseData.taglinePt, selectedHouseData.taglineEn, selectedHouseData.taglineEs)
+      : '';
+    
     const message = t(
-      // PT
-      `Olá! Gostaria de reservar o pacote.\n\n` +
-      `📅 Data de check-in: ${dateText}\n` +
-      `👥 Número de pessoas: ${selectedPeople}\n` +
-      `✨ Experiências extras: ${selectedExtrasText}\n` +
-      `💶 Valor total: €${totalPrice}\n\n` +
-      `Pode verificar a disponibilidade?`,
-
-      // EN
-      `Hello! I would like to book the package.\n\n` +
-      `📅 Check-in date: ${dateText}\n` +
-      `👥 Number of people: ${selectedPeople}\n` +
-      `✨ Extra experiences: ${selectedExtrasText}\n` +
-      `💶 Total price: €${totalPrice}\n\n` +
-      `Can you confirm availability?`,
-
-      // ES
-      `¡Hola! Me gustaría reservar el paquete.\n\n` +
-      `📅 Fecha de check-in: ${dateText}\n` +
-      `👥 Número de personas: ${selectedPeople}\n` +
-      `✨ Experiencias extras: ${selectedExtrasText}\n` +
-      `💶 Precio total: €${totalPrice}\n\n` +
-      `¿Puede confirmar disponibilidad?`
+      `Olá! Gostaria de reservar o pacote para ${selectedPeople} pessoa(s). Acomodação: ${houseName} - ${houseTagline}. Data de check-in: ${dateText}. Total: €${totalPrice}`,
+      `Hello! I would like to book the package for ${selectedPeople} person(s). Accommodation: ${houseName} - ${houseTagline}. Check-in date: ${dateText}. Total: €${totalPrice}`,
+      `¡Hola! Me gustaría reservar el paquete para ${selectedPeople} persona(s). Alojamiento: ${houseName} - ${houseTagline}. Fecha de check-in: ${dateText}. Total: €${totalPrice}`
     );
-
-    const whatsappUrl = `https://wa.me/5524999880848?text=${encodeURIComponent(message)}`;
+    
+    const whatsappUrl = `https://wa.me/5524999999999?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
-
+    
     toast.success(
       t(
         'Redirecionando para WhatsApp...',
@@ -98,7 +148,6 @@ export function Packages() {
       )
     );
   };
-  // --- FIM DAS ALTERAÇÕES ---
 
   return (
     <section id="packages" className="py-20 bg-background">
@@ -120,7 +169,7 @@ export function Packages() {
               <Users className="w-6 h-6 text-primary" />
               {t('Selecione o Número de Pessoas', 'Select Number of People', 'Seleccione el Número de Personas')}
             </h3>
-
+            
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               {packages.map((pkg) => (
                 <button
@@ -133,21 +182,69 @@ export function Packages() {
                   }`}
                 >
                   <div className="text-center">
-                    <Users
-                      className={`w-8 h-8 mx-auto mb-2 ${
-                        selectedPeople === pkg.people ? 'text-primary' : 'text-muted-foreground'
-                      }`}
-                    />
+                    <Users className={`w-8 h-8 mx-auto mb-2 ${
+                      selectedPeople === pkg.people ? 'text-primary' : 'text-muted-foreground'
+                    }`} />
                     <p className="font-semibold text-lg mb-1">
-                      {pkg.people}{' '}
-                      {pkg.people === 1
+                      {pkg.people} {pkg.people === 1 
                         ? t('pessoa', 'person', 'persona')
-                        : t('pessoas', 'people', 'personas')}
+                        : t('pessoas', 'people', 'personas')
+                      }
                     </p>
                     <p className="text-2xl font-bold text-primary">€{pkg.price}</p>
                   </div>
                 </button>
               ))}
+            </div>
+          </Card>
+
+          {/* Seleção de Casa */}
+          <Card className="p-8 mb-8 border-secondary/20">
+            <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
+              <Home className="w-6 h-6 text-secondary" />
+              {t('Selecione a Acomodação', 'Select Accommodation', 'Seleccione el Alojamiento')}
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {houses.map((house) => {
+                const IconComponent = house.icon;
+                return (
+                  <button
+                    key={house.id}
+                    onClick={() => setSelectedHouse(house.id)}
+                    className={`p-6 rounded-xl border-2 transition-all hover:scale-[1.02] text-left ${
+                      selectedHouse === house.id
+                        ? 'border-secondary bg-secondary/10 shadow-elegant'
+                        : 'border-border hover:border-secondary/50'
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={`p-3 rounded-lg ${
+                        selectedHouse === house.id ? 'bg-secondary/20' : 'bg-muted'
+                      }`}>
+                        <IconComponent className={`w-6 h-6 ${
+                          selectedHouse === house.id ? 'text-secondary' : 'text-muted-foreground'
+                        }`} />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-bold text-lg">{house.name}</p>
+                        <p className={`text-sm mb-2 ${
+                          selectedHouse === house.id ? 'text-secondary' : 'text-muted-foreground'
+                        }`}>
+                          {t(house.taglinePt, house.taglineEn, house.taglineEs)}
+                        </p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Check className="w-3 h-3" />
+                          {t(house.highlightPt, house.highlightEn, house.highlightEs)}
+                        </p>
+                      </div>
+                      {selectedHouse === house.id && (
+                        <Check className="w-5 h-5 text-secondary" />
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </Card>
 
@@ -157,14 +254,14 @@ export function Packages() {
               <CalendarIcon className="w-6 h-6 text-accent" />
               {t('Data de Check-in', 'Check-in Date', 'Fecha de Check-in')}
             </h3>
-
+            
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className={cn(
-                    'w-full md:w-[300px] justify-start text-left font-normal',
-                    !checkInDate && 'text-muted-foreground'
+                    "w-full md:w-[300px] justify-start text-left font-normal",
+                    !checkInDate && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
@@ -175,7 +272,6 @@ export function Packages() {
                   )}
                 </Button>
               </PopoverTrigger>
-
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
@@ -189,12 +285,12 @@ export function Packages() {
             </Popover>
           </Card>
 
-          {/* Extras */}
+          {/* Opcionais */}
           <Card className="p-8 mb-8 border-accent/20">
             <h3 className="text-xl font-semibold mb-6">
               {t('Adicione Experiências Extras', 'Add Extra Experiences', 'Añade Experiencias Extras')}
             </h3>
-
+            
             <div className="space-y-4">
               {extras.map((extra) => (
                 <div
@@ -221,7 +317,7 @@ export function Packages() {
             </div>
           </Card>
 
-          {/* Resumo */}
+          {/* Resumo e Booking */}
           <Card className="p-8 bg-gradient-sunset border-none text-white">
             <div className="flex flex-col md:flex-row justify-between items-center gap-6">
               <div>
@@ -233,10 +329,10 @@ export function Packages() {
                   {totalPrice}
                 </div>
                 <p className="text-white/80 mt-2">
-                  {selectedPeople}{' '}
-                  {selectedPeople === 1
+                  {selectedHouseData?.name} • {selectedPeople} {selectedPeople === 1 
                     ? t('pessoa', 'person', 'persona')
-                    : t('pessoas', 'people', 'personas')}
+                    : t('pessoas', 'people', 'personas')
+                  }
                   {selectedExtras.length > 0 && ` + ${selectedExtras.length} ${t('extras', 'extras', 'extras')}`}
                 </p>
               </div>
@@ -262,7 +358,6 @@ export function Packages() {
                     )}
                   </p>
                 </div>
-
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <p>
@@ -273,7 +368,6 @@ export function Packages() {
                     )}
                   </p>
                 </div>
-
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <p>
