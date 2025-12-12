@@ -1,8 +1,15 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+interface User {
+  id: string;
+  email: string;
+  full_name?: string;
+  role?: 'admin' | 'operator' | 'client';
+}
+
 interface AuthContextType {
-  user: any;
+  user: User | null;
   loading: boolean;
   isAdminOrOperator: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: any }>;
@@ -13,20 +20,50 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getUser = async () => {
+    const loadUser = async () => {
       const { data } = await supabase.auth.getUser();
-      setUser(data?.user ?? null);
+      if (data?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role, full_name')
+          .eq('id', data.user.id)
+          .single();
+
+        setUser({
+          id: data.user.id,
+          email: data.user.email!,
+          full_name: profile?.full_name,
+          role: profile?.role || 'client',
+        });
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     };
 
-    getUser();
+    loadUser();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role, full_name')
+          .eq('id', session.user.id)
+          .single();
+
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          full_name: profile?.full_name,
+          role: profile?.role || 'client',
+        });
+      } else {
+        setUser(null);
+      }
     });
 
     return () => listener.subscription.unsubscribe();
@@ -34,23 +71,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (!error) setUser(data.user);
+    if (!error && data.user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, full_name')
+        .eq('id', data.user.id)
+        .single();
+
+      setUser({
+        id: data.user.id,
+        email: data.user.email!,
+        full_name: profile?.full_name,
+        role: profile?.role || 'client',
+      });
+    }
     return { error };
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    // Cria usuário no Supabase
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
 
-    // Você pode salvar fullName em outra tabela "profiles" se quiser
     if (!error && data.user) {
       await supabase.from("profiles").insert({
         id: data.user.id,
         full_name: fullName,
-        role: "client", // padrão, você pode ajustar para admin manualmente
+        role: "client",
       });
     }
 
@@ -62,8 +110,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
   };
 
-  const isAdminOrOperator =
-    user?.role === "admin" || user?.role === "operator";
+  const isAdminOrOperator = user?.role === "admin" || user?.role === "operator";
 
   return (
     <AuthContext.Provider value={{ user, loading, isAdminOrOperator, signIn, signUp, signOut }}>
