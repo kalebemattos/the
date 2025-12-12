@@ -1,17 +1,29 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/integrations/supabase/client";
 
-const AuthContext = createContext(null);
+interface AuthContextType {
+  user: any;
+  loading: boolean;
+  isAdminOrOperator: boolean;
+  signIn: (email: string, password: string) => Promise<{ error?: any }>;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error?: any }>;
+  signOut: () => Promise<void>;
+}
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
       setUser(data?.user ?? null);
       setLoading(false);
-    });
+    };
+
+    getUser();
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
@@ -20,24 +32,48 @@ export const AuthProvider = ({ children }) => {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
+  const signIn = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!error) setUser(data.user);
+    return { error };
+  };
+
+  const signUp = async (email: string, password: string, fullName: string) => {
+    // Cria usuário no Supabase
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
-    if (error) throw error;
-    return data;
+
+    // Você pode salvar fullName em outra tabela "profiles" se quiser
+    if (!error && data.user) {
+      await supabase.from("profiles").insert({
+        id: data.user.id,
+        full_name: fullName,
+        role: "client", // padrão, você pode ajustar para admin manualmente
+      });
+    }
+
+    return { error };
   };
 
-  const logout = async () => {
+  const signOut = async () => {
     await supabase.auth.signOut();
+    setUser(null);
   };
+
+  const isAdminOrOperator =
+    user?.role === "admin" || user?.role === "operator";
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, isAdminOrOperator, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+  return context;
+};
