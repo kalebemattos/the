@@ -16,7 +16,9 @@ import AdminPDV from "./pages/admin/PDV";
 import AdminGalleries from "./pages/admin/Galleries";
 import AdminUsers from "./pages/admin/Users";
 import AdminClients from "./pages/admin/Clients";
-import Reset from "./pages/admin/Reset"; // 👈 ADICIONADO
+
+import ForgotPassword from "./pages/admin/ForgotPassword";
+import ResetPassword from "./pages/admin/ResetPassword";
 
 import ClientLogin from "./pages/client/Login";
 import ClientDashboard from "./pages/client/Dashboard";
@@ -34,12 +36,14 @@ const App = () => (
             {/* Site comum */}
             <Route path="/" element={<Index />} />
 
-            {/* Admin */}
+            {/* Login Admin */}
             <Route path="/admin/login" element={<AdminLogin />} />
 
-            {/* Rota de reset de senha */}
-            <Route path="/admin/reset" element={<Reset />} /> {/* 👈 ADICIONADA */}
+            {/* Rotas de recuperação de senha */}
+            <Route path="/admin/forgot" element={<ForgotPassword />} />
+            <Route path="/admin/reset" element={<ResetPassword />} />
 
+            {/* Área admin (protegida no AdminLayout) */}
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
               <Route path="pdv" element={<AdminPDV />} />
@@ -52,7 +56,7 @@ const App = () => (
             <Route path="/cliente/login" element={<ClientLogin />} />
             <Route path="/cliente" element={<ClientDashboard />} />
 
-            {/* Rota final */}
+            {/* Not found */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

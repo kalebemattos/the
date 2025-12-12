@@ -14,6 +14,8 @@ interface AuthContextType {
   isAdminOrOperator: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: any }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error?: any }>;
+  resetPassword: (email: string) => Promise<{ error?: any }>;
+  updatePassword: (newPassword: string) => Promise<{ error?: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -105,6 +107,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return { error };
   };
 
+  // 🔥 ADICIONADO — FUNÇÃO DE RESET DE SENHA
+  const resetPassword = async (email: string) => {
+    return supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: "https://thebestofangra.vercel.app/admin/reset"
+    });
+  };
+
+  // 🔥 ADICIONADO — SALVAR NOVA SENHA
+  const updatePassword = async (newPassword: string) => {
+    return supabase.auth.updateUser({ password: newPassword });
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -113,7 +127,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const isAdminOrOperator = user?.role === "admin" || user?.role === "operator";
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAdminOrOperator, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      isAdminOrOperator, 
+      signIn, 
+      signUp, 
+      resetPassword,
+      updatePassword,
+      signOut 
+    }}>
       {children}
     </AuthContext.Provider>
   );
