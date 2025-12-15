@@ -1,11 +1,13 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+
+type Role = "admin" | "operator" | "client";
 
 interface User {
   id: string;
   email: string;
   full_name?: string;
-  role?: 'admin' | 'operator' | 'client';
+  role: Role;
 }
 
 interface AuthContextType {
@@ -25,125 +27,95 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // 🔹 Converte usuário do Supabase para o formato do app
+  const mapUser = (sbUser: any): User => ({
+    id: sbUser.id,
+    email: sbUser.email,
+    full_name: sbUser.user_metadata?.full_name,
+    role: (sbUser.user_metadata?.role as Role) || "client",
+  });
+
   useEffect(() => {
     const loadUser = async () => {
       const { data } = await supabase.auth.getUser();
-      if (data?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role, full_name')
-          .eq('id', data.user.id)
-          .single();
-
-        setUser({
-          id: data.user.id,
-          email: data.user.email!,
-          full_name: profile?.full_name,
-          role: profile?.role || 'client',
-        });
-      } else {
-        setUser(null);
-      }
+      setUser(data?.user ? mapUser(data.user) : null);
       setLoading(false);
     };
 
     loadUser();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role, full_name')
-          .eq('id', session.user.id)
-          .single();
-
-        setUser({
-          id: session.user.id,
-          email: session.user.email!,
-          full_name: profile?.full_name,
-          role: profile?.role || 'client',
-        });
-      } else {
-        setUser(null);
-      }
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ? mapUser(session.user) : null);
     });
 
     return () => listener.subscription.unsubscribe();
   }, []);
 
+  // 🔹 LOGIN
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (!error && data.user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role, full_name')
-        .eq('id', data.user.id)
-        .single();
-
-      setUser({
-        id: data.user.id,
-        email: data.user.email!,
-        full_name: profile?.full_name,
-        role: profile?.role || 'client',
-      });
-    }
+    if (!error && data.user) setUser(mapUser(data.user));
     return { error };
   };
 
+  // 🔹 CADASTRO
   const signUp = async (email: string, password: string, fullName: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          full_name: fullName,
+          role: "client", // padrão
+        },
+      },
     });
 
-    if (!error && data.user) {
-      await supabase.from("profiles").insert({
-        id: data.user.id,
-        full_name: fullName,
-        role: "client",
-      });
-    }
-
+    if (!error && data.user) setUser(mapUser(data.user));
     return { error };
   };
 
-  // 🔥 ADICIONADO — FUNÇÃO DE RESET DE SENHA
+  // 🔹 RESET DE SENHA (EMAIL)
   const resetPassword = async (email: string) => {
     return supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://thebestofangra.vercel.app/admin/reset"
+      redirectTo: "https://thebestofangra.vercel.app/admin/reset",
     });
   };
 
-  // 🔥 ADICIONADO — SALVAR NOVA SENHA
+  // 🔹 ATUALIZAR SENHA
   const updatePassword = async (newPassword: string) => {
     return supabase.auth.updateUser({ password: newPassword });
   };
 
+  // 🔹 LOGOUT
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
   };
 
-  const isAdminOrOperator = user?.role === "admin" || user?.role === "operator";
+  const isAdminOrOperator =
+    user?.role === "admin" || user?.role === "operator";
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      isAdminOrOperator, 
-      signIn, 
-      signUp, 
-      resetPassword,
-      updatePassword,
-      signOut 
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        isAdminOrOperator,
+        signIn,
+        signUp,
+        resetPassword,
+        updatePassword,
+        signOut,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within an AuthProvider");
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
 };
