@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-type Role = "admin" | "operator" | "client";
+type Role = "admin" | "operator" | "staff";
 
 interface User {
   id: string;
@@ -27,16 +27,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔹 Carrega usuário + role da tabela users_metadata
+  // 🔹 Carrega usuário da tabela CORRETA: users_meta
   const loadUser = async (authUser: any) => {
-    const { data: meta, error } = await supabase
-      .from("users_metadata")
+    const { data, error } = await supabase
+      .from("users_meta")
       .select("name, role")
       .eq("auth_id", authUser.id)
       .single();
 
-    if (error) {
-      console.error("Erro ao buscar users_metadata:", error);
+    if (error || !data) {
+      console.error("Erro ao buscar users_meta:", error);
       setUser(null);
       return;
     }
@@ -44,8 +44,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser({
       id: authUser.id,
       email: authUser.email,
-      name: meta?.name,
-      role: meta?.role || "client",
+      name: data.name,
+      role: data.role,
     });
   };
 
@@ -93,10 +93,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     if (!error && data.user) {
-      await supabase.from("users_metadata").insert({
+      await supabase.from("users_meta").insert({
         auth_id: data.user.id,
+        email,
         name,
-        role: "client",
+        role: "staff",
       });
 
       await loadUser(data.user);
