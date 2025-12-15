@@ -19,23 +19,27 @@ export function AdminLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // 🔄 Loading REAL (aguarda auth + metadata)
+  // 🔄 Loading global (auth + metadata)
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
       </div>
     );
   }
 
-  // 🔐 Não autenticado
+  // 🔐 Não autenticado → login
   if (!user) {
     return <Navigate to="/admin/login" replace />;
   }
 
-  // ⛔ Role ainda não resolvido (proteção extra)
+  // ⏳ Role ainda não resolvido → loading (NUNCA null)
   if (!user.role) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
   }
 
   // ⛔ Sem permissão
@@ -70,7 +74,7 @@ export function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      {/* Mobile toggle */}
+      {/* Botão mobile */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <Button
           variant="outline"
