@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-type Role = "admin" | "operator" | "staff";
+type Role = "admin" | "operator" | "client";
 
 interface User {
   id: string;
@@ -23,65 +23,53 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔹 Carrega usuário da tabela CORRETA: users_meta
-  const loadUser = async (authUser: any) => {
-    const { data, error } = await supabase
-      .from("users_meta")
-      .select("name, role")
-      .eq("auth_id", authUser.id)
-      .single();
+  // 🔹 Carrega usuário + role real
+  const loadUser = async () => {
+    const { data } = await supabase.auth.getUser();
 
-    if (error || !data) {
-      console.error("Erro ao buscar users_meta:", error);
+    if (!data.user) {
       setUser(null);
+      setLoading(false);
       return;
     }
 
+    const { data: meta } = await supabase
+      .from("users_meta")
+      .select("name, role")
+      .eq("auth_id", data.user.id)
+      .single();
+
     setUser({
-      id: authUser.id,
-      email: authUser.email,
-      name: data.name,
-      role: data.role,
+      id: data.user.id,
+      email: data.user.email!,
+      name: meta?.name,
+      role: (meta?.role as Role) || "client",
     });
+
+    setLoading(false);
   };
 
   useEffect(() => {
-    const init = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user) await loadUser(data.user);
-      setLoading(false);
-    };
+    loadUser();
 
-    init();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (session?.user) {
-          await loadUser(session.user);
-        } else {
-          setUser(null);
-        }
-      }
-    );
+    const { data: listener } = supabase.auth.onAuthStateChange(() => {
+      loadUser();
+    });
 
     return () => listener.subscription.unsubscribe();
   }, []);
 
   // 🔹 LOGIN
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-
-    if (!error && data.user) {
-      await loadUser(data.user);
-    }
-
+    if (!error) await loadUser();
     return { error };
   };
 
@@ -95,12 +83,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!error && data.user) {
       await supabase.from("users_meta").insert({
         auth_id: data.user.id,
-        email,
         name,
-        role: "staff",
+        role: "client",
       });
 
-      await loadUser(data.user);
+      await loadUser();
     }
 
     return { error };
@@ -124,15 +111,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
   };
 
-  const isAdminOrOperator =
-    user?.role === "admin" || user?.role === "operator";
-
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
-        isAdminOrOperator,
+        isAdminOrOperator:
+          user?.role === "admin" || user?.role === "operator",
         signIn,
         signUp,
         resetPassword,
@@ -143,10 +128,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  if (!ctx) throw new Error("useAuth deve ser usado dentro do AuthProvider");
   return ctx;
 };
