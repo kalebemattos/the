@@ -6,7 +6,7 @@ type Role = "admin" | "operator" | "client";
 interface User {
   id: string;
   email: string;
-  full_name?: string;
+  name?: string;
   role: Role;
 }
 
@@ -15,7 +15,7 @@ interface AuthContextType {
   loading: boolean;
   isAdminOrOperator: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: any }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error?: any }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error?: any }>;
   resetPassword: (email: string) => Promise<{ error?: any }>;
   updatePassword: (newPassword: string) => Promise<{ error?: any }>;
   signOut: () => Promise<void>;
@@ -27,55 +27,85 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔹 Converte usuário do Supabase para o formato do app
-  const mapUser = (sbUser: any): User => ({
-    id: sbUser.id,
-    email: sbUser.email,
-    full_name: sbUser.user_metadata?.full_name,
-    role: (sbUser.user_metadata?.role as Role) || "client",
-  });
+  // 🔹 Carrega usuário + role da tabela users_metadata
+  const loadUser = async (authUser: any) => {
+    const { data: meta, error } = await supabase
+      .from("users_metadata")
+      .select("name, role")
+      .eq("auth_id", authUser.id)
+      .single();
+
+    if (error) {
+      console.error("Erro ao buscar users_metadata:", error);
+      setUser(null);
+      return;
+    }
+
+    setUser({
+      id: authUser.id,
+      email: authUser.email,
+      name: meta?.name,
+      role: meta?.role || "client",
+    });
+  };
 
   useEffect(() => {
-    const loadUser = async () => {
+    const init = async () => {
       const { data } = await supabase.auth.getUser();
-      setUser(data?.user ? mapUser(data.user) : null);
+      if (data?.user) await loadUser(data.user);
       setLoading(false);
     };
 
-    loadUser();
+    init();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ? mapUser(session.user) : null);
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (session?.user) {
+          await loadUser(session.user);
+        } else {
+          setUser(null);
+        }
+      }
+    );
 
     return () => listener.subscription.unsubscribe();
   }, []);
 
   // 🔹 LOGIN
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (!error && data.user) setUser(mapUser(data.user));
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (!error && data.user) {
+      await loadUser(data.user);
+    }
+
     return { error };
   };
 
   // 🔹 CADASTRO
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, name: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: {
-          full_name: fullName,
-          role: "client", // padrão
-        },
-      },
     });
 
-    if (!error && data.user) setUser(mapUser(data.user));
+    if (!error && data.user) {
+      await supabase.from("users_metadata").insert({
+        auth_id: data.user.id,
+        name,
+        role: "client",
+      });
+
+      await loadUser(data.user);
+    }
+
     return { error };
   };
 
-  // 🔹 RESET DE SENHA (EMAIL)
+  // 🔹 RESET DE SENHA
   const resetPassword = async (email: string) => {
     return supabase.auth.resetPasswordForEmail(email, {
       redirectTo: "https://thebestofangra.vercel.app/admin/reset",
