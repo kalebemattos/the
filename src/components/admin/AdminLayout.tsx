@@ -1,11 +1,11 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { 
-  LayoutDashboard, 
-  ShoppingCart, 
-  Image, 
-  Users, 
+import {
+  LayoutDashboard,
+  ShoppingCart,
+  Image,
+  Users,
   LogOut,
   Menu,
   X,
@@ -15,8 +15,11 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 export function AdminLayout() {
-  const { user, loading, isAdminOrOperator, signOut, role } = useAuth();
+  const { user, loading, isAdminOrOperator, signOut } = useAuth();
+  const role = user?.role;
+
   const location = useLocation();
+  const currentPath = location.hash.replace('#', '');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (loading) {
@@ -36,7 +39,9 @@ export function AdminLayout() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-2">Acesso Negado</h1>
-          <p className="text-muted-foreground mb-4">Você não tem permissão para acessar esta área.</p>
+          <p className="text-muted-foreground mb-4">
+            Você não tem permissão para acessar esta área.
+          </p>
           <Button onClick={signOut}>Sair</Button>
         </div>
       </div>
@@ -48,14 +53,16 @@ export function AdminLayout() {
     { name: 'PDV', href: '/admin/pdv', icon: ShoppingCart },
     { name: 'Clientes', href: '/admin/clients', icon: UserCheck },
     { name: 'Galerias', href: '/admin/galleries', icon: Image },
-    ...(role === 'admin' ? [{ name: 'Usuários', href: '/admin/users', icon: Users }] : []),
+    ...(role === 'admin'
+      ? [{ name: 'Usuários', href: '/admin/users', icon: Users }]
+      : []),
   ];
 
   const isActive = (href: string) => {
     if (href === '/admin') {
-      return location.pathname === '/admin';
+      return currentPath === '/admin';
     }
-    return location.pathname.startsWith(href);
+    return currentPath.startsWith(href);
   };
 
   return (
