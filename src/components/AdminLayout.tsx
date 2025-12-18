@@ -15,7 +15,8 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 export function AdminLayout() {
-  const { user, loading, isAdminOrOperator, signOut, role } = useAuth();
+  const { user, loading, isAdminOrOperator, signOut } = useAuth();
+const role = user?.role;
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -48,7 +49,9 @@ export function AdminLayout() {
     { name: 'PDV', href: '/admin/pdv', icon: ShoppingCart },
     { name: 'Clientes', href: '/admin/clients', icon: UserCheck },
     { name: 'Galerias', href: '/admin/galleries', icon: Image },
-    ...(role === 'admin' ? [{ name: 'Usuários', href: '/admin/users', icon: Users }] : []),
+    ...(role === 'admin'
+  ? [{ name: 'Usuários', href: '/admin/users', icon: Users }]
+  : []),
   ];
 
   const isActive = (href: string) => {
@@ -81,7 +84,9 @@ export function AdminLayout() {
         <div className="flex flex-col h-full">
           <div className="p-6 border-b border-border">
             <h1 className="text-xl font-bold text-foreground">Admin Panel</h1>
-            <p className="text-sm text-muted-foreground capitalize">{role}</p>
+            <p className="text-sm text-muted-foreground capitalize">
+  {role}
+</p>
           </div>
 
           <nav className="flex-1 p-4 space-y-1">
