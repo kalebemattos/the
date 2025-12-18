@@ -44,9 +44,9 @@ export default function AdminLogin() {
     );
   }
 
-  if (user && isAdminOrOperator) {
-    return <Navigate to="/admin" replace />;
-  }
+if (user && isAdminOrOperator) {
+  return <Navigate to="/admin" replace={false} />;
+}
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,7 +88,7 @@ export default function AdminLogin() {
             toast.error(error.message);
           }
         } else {
-          navigate('/admin');
+          navigate('/admin', { replace: true });
         }
       }
     } catch (error) {
