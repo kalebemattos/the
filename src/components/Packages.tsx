@@ -18,9 +18,11 @@ const houses = [
     taglinePt: 'O Canto do Relaxamento',
     taglineEn: 'The Relaxation Corner',
     taglineEs: 'El Rincón del Relax',
+    taglineFr: 'Le Coin de la Détente',
     highlightPt: 'Banheira de Hidromassagem',
     highlightEn: 'Hot Tub',
     highlightEs: 'Bañera de Hidromasaje',
+    highlightFr: 'Jacuzzi',
     icon: Bath,
   },
   {
@@ -29,9 +31,11 @@ const houses = [
     taglinePt: 'Piscina Privativa',
     taglineEn: 'Private Pool',
     taglineEs: 'Piscina Privada',
+    taglineFr: 'Piscine Privée',
     highlightPt: 'Piscina com Hidromassagem',
     highlightEn: 'Pool with Hydromassage',
     highlightEs: 'Piscina con Hidromasaje',
+    highlightFr: 'Piscine avec Hydromassage',
     icon: Waves,
   },
   {
@@ -40,9 +44,11 @@ const houses = [
     taglinePt: 'Tranquilidade Superior',
     taglineEn: 'Upper Floor Tranquility',
     taglineEs: 'Tranquilidad Superior',
+    taglineFr: 'Tranquillité à l\'Étage',
     highlightPt: 'Sacada Privativa',
     highlightEn: 'Private Balcony',
     highlightEs: 'Balcón Privado',
+    highlightFr: 'Balcon Privé',
     icon: Sofa,
   },
   {
@@ -51,9 +57,11 @@ const houses = [
     taglinePt: 'Conforto e Calmaria',
     taglineEn: 'Comfort & Serenity',
     taglineEs: 'Confort y Calma',
+    taglineFr: 'Confort et Sérénité',
     highlightPt: 'Sacada Privativa',
     highlightEn: 'Private Balcony',
     highlightEs: 'Balcón Privado',
+    highlightFr: 'Balcon Privé',
     icon: Sofa,
   },
 ];
@@ -79,6 +87,7 @@ export function Packages() {
       namePt: 'Mergulho Subaquático',
       nameEn: 'Scuba Diving',
       nameEs: 'Buceo Submarino',
+      nameFr: 'Plongée Sous-Marine',
       price: 150
     },
     { 
@@ -86,20 +95,23 @@ export function Packages() {
       namePt: 'Cristo Redentor & Pão de Açúcar',
       nameEn: 'Christ the Redeemer & Sugarloaf',
       nameEs: 'Cristo Redentor y Pan de Azúcar',
-      price: 350
+      nameFr: 'Christ Rédempteur & Pain de Sucre',
+      price: 200
     },
     { 
       id: 'aquarium',
       namePt: 'AquaRio / BioParque',
       nameEn: 'AquaRio / BioParque',
       nameEs: 'AquaRio / BioParque',
-      price: 350
+      nameFr: 'AquaRio / BioParque',
+      price: 100
     },
     { 
       id: 'paragliding',
       namePt: 'Voo de Parapente',
       nameEn: 'Paragliding Flight',
       nameEs: 'Vuelo de Parapente',
+      nameFr: 'Vol en Parapente',
       price: 250
     },
   ];
@@ -124,17 +136,18 @@ export function Packages() {
   const handleBooking = () => {
     const dateText = checkInDate 
       ? format(checkInDate, 'dd/MM/yyyy')
-      : t('(data a definir)', '(date to be defined)', '(fecha por definir)');
+      : t('(data a definir)', '(date to be defined)', '(fecha por definir)', '(date à définir)');
     
     const houseName = selectedHouseData?.name || 'Casa 101';
     const houseTagline = selectedHouseData 
-      ? t(selectedHouseData.taglinePt, selectedHouseData.taglineEn, selectedHouseData.taglineEs)
+      ? t(selectedHouseData.taglinePt, selectedHouseData.taglineEn, selectedHouseData.taglineEs, selectedHouseData.taglineFr)
       : '';
     
     const message = t(
       `Olá! Gostaria de reservar o pacote para ${selectedPeople} pessoa(s). Acomodação: ${houseName} - ${houseTagline}. Data de check-in: ${dateText}. Total: €${totalPrice}`,
       `Hello! I would like to book the package for ${selectedPeople} person(s). Accommodation: ${houseName} - ${houseTagline}. Check-in date: ${dateText}. Total: €${totalPrice}`,
-      `¡Hola! Me gustaría reservar el paquete para ${selectedPeople} persona(s). Alojamiento: ${houseName} - ${houseTagline}. Fecha de check-in: ${dateText}. Total: €${totalPrice}`
+      `¡Hola! Me gustaría reservar el paquete para ${selectedPeople} persona(s). Alojamiento: ${houseName} - ${houseTagline}. Fecha de check-in: ${dateText}. Total: €${totalPrice}`,
+      `Bonjour! Je souhaite réserver le forfait pour ${selectedPeople} personne(s). Hébergement: ${houseName} - ${houseTagline}. Date d'arrivée: ${dateText}. Total: €${totalPrice}`
     );
     
     const whatsappUrl = `https://wa.me/5524999999999?text=${encodeURIComponent(message)}`;
@@ -144,7 +157,8 @@ export function Packages() {
       t(
         'Redirecionando para WhatsApp...',
         'Redirecting to WhatsApp...',
-        'Redirigiendo a WhatsApp...'
+        'Redirigiendo a WhatsApp...',
+        'Redirection vers WhatsApp...'
       )
     );
   };
@@ -156,7 +170,7 @@ export function Packages() {
           <div className="flex items-center justify-center gap-3 mb-4">
             <span className="text-secondary text-2xl">■</span>
             <h2 className="section-title">
-              {t('Pacotes e Valores', 'Packages & Prices', 'Paquetes y Precios')}
+              {t('Pacotes e Valores', 'Packages & Prices', 'Paquetes y Precios', 'Forfaits et Tarifs')}
             </h2>
             <span className="text-secondary text-2xl">■</span>
           </div>
@@ -167,7 +181,7 @@ export function Packages() {
           <Card className="p-8 mb-8 border-primary/20">
             <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
               <Users className="w-6 h-6 text-primary" />
-              {t('Selecione o Número de Pessoas', 'Select Number of People', 'Seleccione el Número de Personas')}
+              {t('Selecione o Número de Pessoas', 'Select Number of People', 'Seleccione el Número de Personas', 'Sélectionnez le Nombre de Personnes')}
             </h3>
             
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -187,8 +201,8 @@ export function Packages() {
                     }`} />
                     <p className="font-semibold text-lg mb-1">
                       {pkg.people} {pkg.people === 1 
-                        ? t('pessoa', 'person', 'persona')
-                        : t('pessoas', 'people', 'personas')
+                        ? t('pessoa', 'person', 'persona', 'personne')
+                        : t('pessoas', 'people', 'personas', 'personnes')
                       }
                     </p>
                     <p className="text-2xl font-bold text-primary">€{pkg.price}</p>
@@ -202,7 +216,7 @@ export function Packages() {
           <Card className="p-8 mb-8 border-secondary/20">
             <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
               <Home className="w-6 h-6 text-secondary" />
-              {t('Selecione a Acomodação', 'Select Accommodation', 'Seleccione el Alojamiento')}
+              {t('Selecione a Acomodação', 'Select Accommodation', 'Seleccione el Alojamiento', 'Sélectionnez l\'Hébergement')}
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -231,11 +245,11 @@ export function Packages() {
                         <p className={`text-sm mb-2 ${
                           selectedHouse === house.id ? 'text-secondary' : 'text-muted-foreground'
                         }`}>
-                          {t(house.taglinePt, house.taglineEn, house.taglineEs)}
+                          {t(house.taglinePt, house.taglineEn, house.taglineEs, house.taglineFr)}
                         </p>
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
                           <Check className="w-3 h-3" />
-                          {t(house.highlightPt, house.highlightEn, house.highlightEs)}
+                          {t(house.highlightPt, house.highlightEn, house.highlightEs, house.highlightFr)}
                         </p>
                       </div>
                       {selectedHouse === house.id && (
@@ -252,7 +266,7 @@ export function Packages() {
           <Card className="p-8 mb-8 border-accent/20">
             <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
               <CalendarIcon className="w-6 h-6 text-accent" />
-              {t('Data de Check-in', 'Check-in Date', 'Fecha de Check-in')}
+              {t('Data de Check-in', 'Check-in Date', 'Fecha de Check-in', 'Date d\'Arrivée')}
             </h3>
             
             <Popover>
@@ -268,7 +282,7 @@ export function Packages() {
                   {checkInDate ? (
                     format(checkInDate, 'dd/MM/yyyy')
                   ) : (
-                    <span>{t('Selecione a data', 'Pick a date', 'Seleccione la fecha')}</span>
+                    <span>{t('Selecione a data', 'Pick a date', 'Seleccione la fecha', 'Choisissez une date')}</span>
                   )}
                 </Button>
               </PopoverTrigger>
@@ -288,7 +302,7 @@ export function Packages() {
           {/* Opcionais */}
           <Card className="p-8 mb-8 border-accent/20">
             <h3 className="text-xl font-semibold mb-6">
-              {t('Adicione Experiências Extras', 'Add Extra Experiences', 'Añade Experiencias Extras')}
+              {t('Adicione Experiências Extras', 'Add Extra Experiences', 'Añade Experiencias Extras', 'Ajoutez des Expériences Supplémentaires')}
             </h3>
             
             <div className="space-y-4">
@@ -305,7 +319,7 @@ export function Packages() {
                       onCheckedChange={() => toggleExtra(extra.id)}
                     />
                     <Label htmlFor={extra.id} className="cursor-pointer font-medium">
-                      {t(extra.namePt, extra.nameEn, extra.nameEs)}
+                      {t(extra.namePt, extra.nameEn, extra.nameEs, extra.nameFr)}
                     </Label>
                   </div>
                   <div className="flex items-center gap-2 text-lg font-semibold text-accent">
@@ -322,7 +336,7 @@ export function Packages() {
             <div className="flex flex-col md:flex-row justify-between items-center gap-6">
               <div>
                 <h3 className="text-2xl font-bold mb-2">
-                  {t('Valor Total', 'Total Price', 'Precio Total')}
+                  {t('Valor Total', 'Total Price', 'Precio Total', 'Prix Total')}
                 </h3>
                 <div className="flex items-center gap-2 text-4xl font-bold">
                   <Euro className="w-8 h-8" />
@@ -330,10 +344,10 @@ export function Packages() {
                 </div>
                 <p className="text-white/80 mt-2">
                   {selectedHouseData?.name} • {selectedPeople} {selectedPeople === 1 
-                    ? t('pessoa', 'person', 'persona')
-                    : t('pessoas', 'people', 'personas')
+                    ? t('pessoa', 'person', 'persona', 'personne')
+                    : t('pessoas', 'people', 'personas', 'personnes')
                   }
-                  {selectedExtras.length > 0 && ` + ${selectedExtras.length} ${t('extras', 'extras', 'extras')}`}
+                  {selectedExtras.length > 0 && ` + ${selectedExtras.length} ${t('extras', 'extras', 'extras', 'extras')}`}
                 </p>
               </div>
 
@@ -342,7 +356,7 @@ export function Packages() {
                 size="lg"
                 className="bg-white text-primary hover:bg-white/90 px-12 py-6 text-lg font-semibold shadow-elegant hover:scale-105 transition-all"
               >
-                {t('Reservar Agora', 'Book Now', 'Reservar Ahora')} →
+                {t('Reservar Agora', 'Book Now', 'Reservar Ahora', 'Réserver Maintenant')} →
               </Button>
             </div>
 
@@ -354,7 +368,8 @@ export function Packages() {
                     {t(
                       'Inclui: Hospedagem completa, motorista privado, dois passeios de lancha, visitas guiadas e roteiros culturais e naturais.',
                       'Includes: Full accommodation, private driver, two boat tours, guided tours, and cultural and natural itineraries.',
-                      'Incluye: Alojamiento completo, conductor privado, dos paseos en lancha, visitas guiadas e itinerarios culturales y naturales.'
+                      'Incluye: Alojamiento completo, conductor privado, dos paseos en lancha, visitas guiadas e itinerarios culturales y naturales.',
+                      'Comprend: Hébergement complet, chauffeur privé, deux excursions en bateau, visites guidées et itinéraires culturels et naturels.'
                     )}
                   </p>
                 </div>
@@ -364,7 +379,8 @@ export function Packages() {
                     {t(
                       'Valores em euros, baseados no câmbio atual.',
                       'Prices in euros, based on current exchange rate.',
-                      'Precios en euros, basados en el tipo de cambio actual.'
+                      'Precios en euros, basados en el tipo de cambio actual.',
+                      'Prix en euros, basés sur le taux de change actuel.'
                     )}
                   </p>
                 </div>
@@ -374,7 +390,8 @@ export function Packages() {
                     {t(
                       'Assistência completa para compra de passagens aéreas Europa–Rio–Europa.',
                       'Complete assistance for purchasing Europe–Rio–Europe airline tickets.',
-                      'Asistencia completa para la compra de boletos aéreos Europa–Río–Europa.'
+                      'Asistencia completa para la compra de boletos aéreos Europa–Río–Europa.',
+                      'Assistance complète pour l\'achat de billets d\'avion Europe–Rio–Europe.'
                     )}
                   </p>
                 </div>

@@ -19,7 +19,8 @@ export function Footer() {
               {t(
                 'Experiências únicas no paraíso brasileiro. Transformando sonhos em memórias inesquecíveis.',
                 'Unique experiences in the Brazilian paradise. Turning dreams into unforgettable memories.',
-                'Experiencias únicas en el paraíso brasileño. Transformando sueños en recuerdos inolvidables.'
+                'Experiencias únicas en el paraíso brasileño. Transformando sueños en recuerdos inolvidables.',
+                'Expériences uniques au paradis brésilien. Transformer les rêves en souvenirs inoubliables.'
               )}
             </p>
           </div>
@@ -27,27 +28,27 @@ export function Footer() {
           {/* Quick Links */}
           <div>
             <h4 className="text-lg font-semibold mb-4">
-              {t('Links Rápidos', 'Quick Links', 'Enlaces Rápidos')}
+              {t('Links Rápidos', 'Quick Links', 'Enlaces Rápidos', 'Liens Rapides')}
             </h4>
             <ul className="space-y-2">
               <li>
                 <a href="#accommodation" className="text-white/80 hover:text-white transition-colors">
-                  {t('Hospedagem', 'Accommodation', 'Alojamiento')}
+                  {t('Hospedagem', 'Accommodation', 'Alojamiento', 'Hébergement')}
                 </a>
               </li>
               <li>
                 <a href="#itinerary" className="text-white/80 hover:text-white transition-colors">
-                  {t('Roteiro', 'Itinerary', 'Itinerario')}
+                  {t('Roteiro', 'Itinerary', 'Itinerario', 'Itinéraire')}
                 </a>
               </li>
               <li>
                 <a href="#packages" className="text-white/80 hover:text-white transition-colors">
-                  {t('Pacotes', 'Packages', 'Paquetes')}
+                  {t('Pacotes', 'Packages', 'Paquetes', 'Forfaits')}
                 </a>
               </li>
               <li>
                 <a href="#contact" className="text-white/80 hover:text-white transition-colors">
-                  {t('Contato', 'Contact', 'Contacto')}
+                  {t('Contato', 'Contact', 'Contacto', 'Contact')}
                 </a>
               </li>
             </ul>
@@ -56,7 +57,7 @@ export function Footer() {
           {/* Social Media */}
           <div>
             <h4 className="text-lg font-semibold mb-4">
-              {t('Redes Sociais', 'Social Media', 'Redes Sociales')}
+              {t('Redes Sociais', 'Social Media', 'Redes Sociales', 'Réseaux Sociaux')}
             </h4>
             <div className="flex gap-4">
               <a
@@ -94,18 +95,20 @@ export function Footer() {
             {t(
               'Descubra. Sinta. Viva.',
               'Discover. Feel. Live.',
-              'Descubre. Siente. Vive.'
+              'Descubre. Siente. Vive.',
+              'Découvrez. Ressentez. Vivez.'
             )}
           </p>
           <p className="text-white/80">
             {t(
               'The Best of Angra — onde a beleza nunca acaba.',
               'The Best of Angra — where beauty never ends.',
-              'The Best of Angra — donde la belleza nunca termina.'
+              'The Best of Angra — donde la belleza nunca termina.',
+              'The Best of Angra — où la beauté ne finit jamais.'
             )}
           </p>
           <p className="text-white/60 text-sm mt-4">
-            © 2025 The Best of Angra. {t('Todos os direitos reservados.', 'All rights reserved.', 'Todos los derechos reservados.')}
+            © 2025 The Best of Angra. {t('Todos os direitos reservados.', 'All rights reserved.', 'Todos los derechos reservados.', 'Tous droits réservés.')}
           </p>
         </div>
       </div>

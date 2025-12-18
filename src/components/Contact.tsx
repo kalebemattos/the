@@ -18,15 +18,16 @@ export function Contact() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const message = `${t('Nome', 'Name', 'Nombre')}: ${formData.name}\n${t('Email', 'Email', 'Correo')}: ${formData.email}\n${t('Mensagem', 'Message', 'Mensaje')}: ${formData.message}`;
-    const whatsappUrl = `https://wa.me/5524999880848?text=${encodeURIComponent(message)}`;
+    const message = `${t('Nome', 'Name', 'Nombre', 'Nom')}: ${formData.name}\n${t('Email', 'Email', 'Correo', 'Email')}: ${formData.email}\n${t('Mensagem', 'Message', 'Mensaje', 'Message')}: ${formData.message}`;
+    const whatsappUrl = `https://wa.me/5524999999999?text=${encodeURIComponent(message)}`;
     
     window.open(whatsappUrl, '_blank');
     toast.success(
       t(
         'Redirecionando para WhatsApp...',
         'Redirecting to WhatsApp...',
-        'Redirigiendo a WhatsApp...'
+        'Redirigiendo a WhatsApp...',
+        'Redirection vers WhatsApp...'
       )
     );
     
@@ -34,7 +35,7 @@ export function Contact() {
   };
 
   const openWhatsApp = () => {
-    window.open('https://wa.me/5524999880848', '_blank');
+    window.open('https://wa.me/5524999999999', '_blank');
   };
 
   return (
@@ -44,7 +45,7 @@ export function Contact() {
           <div className="flex items-center justify-center gap-3 mb-4">
             <span className="text-primary text-2xl">■</span>
             <h2 className="section-title">
-              {t('Contato', 'Contact', 'Contacto')}
+              {t('Contato', 'Contact', 'Contacto', 'Contact')}
             </h2>
             <span className="text-primary text-2xl">■</span>
           </div>
@@ -52,7 +53,8 @@ export function Contact() {
             {t(
               'Entre em contato e comece a planejar sua viagem dos sonhos',
               'Get in touch and start planning your dream trip',
-              'Ponte en contacto y comienza a planificar tu viaje de ensueño'
+              'Ponte en contacto y comienza a planificar tu viaje de ensueño',
+              'Contactez-nous et commencez à planifier votre voyage de rêve'
             )}
           </p>
         </div>
@@ -67,9 +69,9 @@ export function Contact() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg mb-1">
-                    {t('Telefone / WhatsApp', 'Phone / WhatsApp', 'Teléfono / WhatsApp')}
+                    {t('Telefone / WhatsApp', 'Phone / WhatsApp', 'Teléfono / WhatsApp', 'Téléphone / WhatsApp')}
                   </h3>
-                  <p className="text-muted-foreground">+55 24 999880848</p>
+                  <p className="text-muted-foreground">+55 24 99999-9999</p>
                 </div>
               </div>
             </Card>
@@ -93,7 +95,7 @@ export function Contact() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg mb-1">
-                    {t('Localização', 'Location', 'Ubicación')}
+                    {t('Localização', 'Location', 'Ubicación', 'Emplacement')}
                   </h3>
                   <p className="text-muted-foreground">Angra dos Reis, Rio de Janeiro, Brasil</p>
                 </div>
@@ -106,7 +108,7 @@ export function Contact() {
               className="w-full bg-gradient-ocean text-white hover:opacity-90 py-6 text-lg shadow-elegant"
             >
               <MessageCircle className="w-5 h-5 mr-2" />
-              {t('Fale com nossa equipe', 'Contact our team', 'Habla con nuestro equipo')}
+              {t('Fale com nossa equipe', 'Contact our team', 'Habla con nuestro equipo', 'Contactez notre équipe')}
             </Button>
           </div>
 
@@ -115,12 +117,12 @@ export function Contact() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  {t('Nome', 'Name', 'Nombre')}
+                  {t('Nome', 'Name', 'Nombre', 'Nom')}
                 </label>
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder={t('Seu nome', 'Your name', 'Tu nombre')}
+                  placeholder={t('Seu nome', 'Your name', 'Tu nombre', 'Votre nom')}
                   required
                 />
               </div>
@@ -131,14 +133,14 @@ export function Contact() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder={t('seu@email.com', 'your@email.com', 'tu@correo.com')}
+                  placeholder={t('seu@email.com', 'your@email.com', 'tu@correo.com', 'votre@email.com')}
                   required
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  {t('Mensagem', 'Message', 'Mensaje')}
+                  {t('Mensagem', 'Message', 'Mensaje', 'Message')}
                 </label>
                 <Textarea
                   value={formData.message}
@@ -146,7 +148,8 @@ export function Contact() {
                   placeholder={t(
                     'Conte-nos sobre sua viagem dos sonhos...',
                     'Tell us about your dream trip...',
-                    'Cuéntanos sobre tu viaje de ensueño...'
+                    'Cuéntanos sobre tu viaje de ensueño...',
+                    'Parlez-nous de votre voyage de rêve...'
                   )}
                   rows={5}
                   required
@@ -158,7 +161,7 @@ export function Contact() {
                 size="lg"
                 className="w-full bg-primary hover:bg-primary-glow text-white py-6 text-lg"
               >
-                {t('Enviar Mensagem', 'Send Message', 'Enviar Mensaje')} →
+                {t('Enviar Mensagem', 'Send Message', 'Enviar Mensaje', 'Envoyer le Message')} →
               </Button>
             </form>
           </Card>

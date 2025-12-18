@@ -34,8 +34,8 @@ export function HouseDetailModal({ house, open, onClose }: HouseDetailModalProps
 
   if (!house) return null;
 
-  const getLocalizedText = (text: { pt: string; en: string; es: string }) => {
-    return text[language];
+  const getLocalizedText = (text: { pt: string; en: string; es: string; fr: string }) => {
+    return text[language] || text.en;
   };
 
   const placeholderImages = [1, 2, 3, 4, 5, 6];
@@ -66,7 +66,7 @@ export function HouseDetailModal({ house, open, onClose }: HouseDetailModalProps
           <div className="space-y-3">
             <h4 className="font-semibold flex items-center gap-2 text-foreground">
               <ImageIcon className="w-5 h-5 text-primary" />
-              {t('Galeria de Fotos', 'Photo Gallery', 'Galería de Fotos')}
+              {t('Galeria de Fotos', 'Photo Gallery', 'Galería de Fotos', 'Galerie Photos')}
             </h4>
             
             {house.images.length > 0 ? (
@@ -97,7 +97,7 @@ export function HouseDetailModal({ house, open, onClose }: HouseDetailModalProps
                     <div className="text-center text-muted-foreground">
                       <Home className="w-8 h-8 mx-auto mb-1 opacity-50" />
                       <span className="text-xs">
-                        {t('Foto', 'Photo', 'Foto')} {index + 1}
+                        {t('Foto', 'Photo', 'Foto', 'Photo')} {index + 1}
                       </span>
                     </div>
                   </div>
@@ -116,7 +116,7 @@ export function HouseDetailModal({ house, open, onClose }: HouseDetailModalProps
           {/* Features */}
           <div className="space-y-3">
             <h4 className="font-semibold text-foreground">
-              {t('Comodidades', 'Amenities', 'Comodidades')}
+              {t('Comodidades', 'Amenities', 'Comodidades', 'Équipements')}
             </h4>
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {house.features.map((feature, index) => (
@@ -137,7 +137,7 @@ export function HouseDetailModal({ house, open, onClose }: HouseDetailModalProps
               <Heart className="w-5 h-5 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold mb-1">
-                  {t('Ideal para', 'Ideal for', 'Ideal para')}
+                  {t('Ideal para', 'Ideal for', 'Ideal para', 'Idéal pour')}
                 </p>
                 <p className="text-white/90 text-sm">
                   {getLocalizedText(house.idealFor)}
@@ -154,7 +154,7 @@ export function HouseDetailModal({ house, open, onClose }: HouseDetailModalProps
               className="flex-1"
             >
               <X className="w-4 h-4 mr-2" />
-              {t('Fechar', 'Close', 'Cerrar')}
+              {t('Fechar', 'Close', 'Cerrar', 'Fermer')}
             </Button>
             <Button
               className="flex-1 bg-primary hover:bg-primary/90"
@@ -168,7 +168,7 @@ export function HouseDetailModal({ house, open, onClose }: HouseDetailModalProps
                 }
               }}
             >
-              {t('Reservar Agora', 'Book Now', 'Reservar Ahora')}
+              {t('Reservar Agora', 'Book Now', 'Reservar Ahora', 'Réserver Maintenant')}
             </Button>
           </div>
         </div>

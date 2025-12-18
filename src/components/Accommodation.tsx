@@ -15,7 +15,7 @@ export function Accommodation() {
           <div className="flex items-center justify-center gap-3 mb-4">
             <span className="text-primary text-2xl">■</span>
             <h2 className="section-title">
-              {t('Hospedagem', 'Accommodation', 'Alojamiento')}
+              {t('Hospedagem', 'Accommodation', 'Alojamiento', 'Hébergement')}
             </h2>
             <span className="text-primary text-2xl">■</span>
           </div>
@@ -23,7 +23,8 @@ export function Accommodation() {
             {t(
               'Escolha entre 4 acomodações exclusivas, cada uma com seu charme único e conforto incomparável.',
               'Choose from 4 exclusive accommodations, each with its unique charm and unmatched comfort.',
-              'Elija entre 4 alojamientos exclusivos, cada uno con su encanto único y confort incomparable.'
+              'Elija entre 4 alojamientos exclusivos, cada uno con su encanto único y confort incomparable.',
+              'Choisissez parmi 4 hébergements exclusifs, chacun avec son charme unique et son confort incomparable.'
             )}
           </p>
         </div>
@@ -49,7 +50,8 @@ export function Accommodation() {
               {t(
                 '"Conforto, privacidade e vista para o mar — o refúgio perfeito em Angra."',
                 '"Comfort, privacy, and ocean views — the perfect retreat in Angra."',
-                '"Comodidad, privacidad y vista al mar — el refugio perfecto en Angra."'
+                '"Comodidad, privacidad y vista al mar — el refugio perfecto en Angra."',
+                '"Confort, intimité et vue sur la mer — la retraite parfaite à Angra."'
               )}
             </p>
           </div>

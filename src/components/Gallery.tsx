@@ -27,7 +27,7 @@ export function Gallery() {
           <div className="flex items-center justify-center gap-3 mb-4">
             <span className="text-accent text-2xl">■</span>
             <h2 className="section-title">
-              {t('Galeria de Experiências', 'Experience Gallery', 'Galería de Experiencias')}
+              {t('Galeria de Experiências', 'Experience Gallery', 'Galería de Experiencias', 'Galerie d\'Expériences')}
             </h2>
             <span className="text-accent text-2xl">■</span>
           </div>
@@ -35,7 +35,8 @@ export function Gallery() {
             {t(
               'Imagens que capturam a essência do paraíso',
               'Images that capture the essence of paradise',
-              'Imágenes que capturan la esencia del paraíso'
+              'Imágenes que capturan la esencia del paraíso',
+              'Images qui capturent l\'essence du paradis'
             )}
           </p>
         </div>

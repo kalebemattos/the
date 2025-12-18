@@ -9,6 +9,7 @@ export function LanguageToggle() {
     { code: 'pt', label: 'PT' },
     { code: 'en', label: 'EN' },
     { code: 'es', label: 'ES' },
+    { code: 'fr', label: 'FR' },
   ] as const;
 
   return (

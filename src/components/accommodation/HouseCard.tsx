@@ -13,8 +13,8 @@ interface HouseCardProps {
 export function HouseCard({ house, onViewDetails }: HouseCardProps) {
   const { language, t } = useLanguage();
 
-  const getLocalizedText = (text: { pt: string; en: string; es: string }) => {
-    return text[language];
+  const getLocalizedText = (text: { pt: string; en: string; es: string; fr: string }) => {
+    return text[language] || text.en;
   };
 
   const getHighlightIcon = () => {
@@ -80,7 +80,7 @@ export function HouseCard({ house, onViewDetails }: HouseCardProps) {
           variant="outline"
           className="w-full group/btn border-primary/30 hover:bg-primary hover:text-primary-foreground"
         >
-          {t('Ver Detalhes', 'View Details', 'Ver Detalles')}
+          {t('Ver Detalhes', 'View Details', 'Ver Detalles', 'Voir les Détails')}
           <ChevronRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
         </Button>
       </CardContent>
