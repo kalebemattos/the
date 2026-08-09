@@ -18,6 +18,7 @@ import {
   Home,
   Globe,
   CheckCircle2,
+  Calendar,
 } from 'lucide-react';
 
 const HOUSES = [
@@ -292,11 +293,18 @@ export default function AdminGalleries() {
     setDialogOpen(true);
   };
 
-  // Split galleries: house galleries vs site galleries
+  // Split galleries: house galleries vs roteiro galleries vs site galleries
   const houseGalleriesMap = Object.fromEntries(
     galleries.filter(g => g.house_id).map(g => [g.house_id!, g])
   );
-  const siteGalleries = galleries.filter(g => !g.house_id);
+  const roteiroGalleries = galleries
+    .filter(g => !g.house_id && g.name.startsWith('roteiro-dia-'))
+    .sort((a, b) => {
+      const numA = parseInt(a.name.replace('roteiro-dia-', ''), 10);
+      const numB = parseInt(b.name.replace('roteiro-dia-', ''), 10);
+      return numA - numB;
+    });
+  const siteGalleries = galleries.filter(g => !g.house_id && !g.name.startsWith('roteiro-dia-'));
 
   if (loading) {
     return (
@@ -436,6 +444,41 @@ export default function AdminGalleries() {
                     >
                       {creatingHouse === house.id ? '...' : 'Criar'}
                     </Button>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+
+          {/* Roteiro galleries */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" />
+                Fotos do Roteiro
+              </CardTitle>
+              <CardDescription>Uma foto por dia do roteiro principal</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {roteiroGalleries.map((gallery) => {
+                const dayNum = parseInt(gallery.name.replace('roteiro-dia-', ''), 10);
+                const isSelected = selectedGallery?.id === gallery.id;
+                return (
+                  <div
+                    key={gallery.id}
+                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                      isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                    }`}
+                    onClick={() => setSelectedGallery(gallery)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="bg-primary text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shrink-0">
+                          {dayNum}
+                        </span>
+                        <span className="font-medium text-sm truncate">{gallery.description || gallery.name}</span>
+                      </div>
+                    </div>
                   </div>
                 );
               })}

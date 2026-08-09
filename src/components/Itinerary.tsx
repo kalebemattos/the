@@ -1,6 +1,8 @@
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Calendar, Anchor, Droplets, Umbrella, Castle, Church, Palmtree, ShoppingBag, Sunset, Heart } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import day1 from '@/assets/day1-accommodation.jpg';
 import day2 from '@/assets/day2-boat-tour.jpg';
 import day3 from '@/assets/day3-waterfall.jpg';
@@ -12,8 +14,47 @@ import day8 from '@/assets/day8-culture.jpg';
 import day9 from '@/assets/day9-sunset-boat.jpg';
 import day10 from '@/assets/day10-farewell.jpg';
 
+const STATIC_IMAGES = [day1, day2, day3, day4, day5, day6, day7, day8, day9, day10];
+
 export function Itinerary() {
   const { t } = useLanguage();
+  const [dayImages, setDayImages] = useState<(string | null)[]>(Array(10).fill(null));
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      const { data: galleries } = await supabase
+        .from('galleries')
+        .select('id, name')
+        .like('name', 'roteiro-dia-%')
+        .order('display_order', { ascending: true });
+
+      if (!galleries?.length) return;
+
+      const images: (string | null)[] = Array(10).fill(null);
+
+      await Promise.all(
+        galleries.map(async (gallery) => {
+          const dayNum = parseInt(gallery.name.replace('roteiro-dia-', ''), 10);
+          if (isNaN(dayNum) || dayNum < 1 || dayNum > 10) return;
+
+          const { data: imgs } = await supabase
+            .from('gallery_images')
+            .select('url')
+            .eq('gallery_id', gallery.id)
+            .order('display_order', { ascending: true })
+            .limit(1);
+
+          if (imgs?.[0]?.url) {
+            images[dayNum - 1] = imgs[0].url;
+          }
+        })
+      );
+
+      setDayImages(images);
+    };
+
+    fetchImages();
+  }, []);
 
   const days = [
     {
@@ -162,6 +203,7 @@ export function Itinerary() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
           {days.map((day, index) => {
             const Icon = day.icon;
+            const imageSrc = dayImages[index] ?? STATIC_IMAGES[index];
             return (
               <Card
                 key={index}
@@ -169,7 +211,7 @@ export function Itinerary() {
               >
                 <div className="relative h-64 overflow-hidden">
                   <img
-                    src={day.image}
+                    src={imageSrc}
                     alt={`Day ${index + 1}`}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
