@@ -1,13 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Limpa sessão expirada ANTES de criar o cliente para evitar deadlock no storage lock
+// Limpa sessão expirada antes de criar o cliente
 try {
   const key = "sb-caqdwewivcqngmetscha-auth-token";
   const raw = localStorage.getItem(key);
   if (raw) {
     const parsed = JSON.parse(raw);
-    const expiresAt = parsed?.expires_at;
-    if (!expiresAt || expiresAt < Math.floor(Date.now() / 1000)) {
+    if (!parsed?.expires_at || parsed.expires_at < Math.floor(Date.now() / 1000)) {
       localStorage.removeItem(key);
     }
   }
@@ -23,6 +22,11 @@ export const supabase = createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: false,
+      // Substitui o Web Locks API por lock simples — evita deadlock quando
+      // o projeto Supabase pausa/restaura e o lock anterior fica preso
+      lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => {
+        return await fn();
+      },
     },
   }
 );

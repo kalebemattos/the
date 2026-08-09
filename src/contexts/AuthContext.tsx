@@ -94,10 +94,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // 🔹 LOGIN
   const signIn = async (email: string, password: string) => {
-    // Limpa sessão diretamente no localStorage (bypassa o SDK para evitar deadlock)
-    try {
-      Object.keys(localStorage).filter(k => k.startsWith('sb-')).forEach(k => localStorage.removeItem(k));
-    } catch {}
 
     try {
       const result = await Promise.race([
