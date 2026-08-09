@@ -55,10 +55,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const init = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
-        if (data?.session?.user) await loadUser(data.session.user);
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          // Sessão inválida — limpa o storage para evitar loop de refresh
+          await supabase.auth.signOut();
+        } else if (data?.session?.user) {
+          await loadUser(data.session.user);
+        }
       } catch (e) {
         console.error('Erro ao inicializar auth:', e);
+        // Garante limpeza em caso de erro inesperado
+        try { await supabase.auth.signOut(); } catch {}
       } finally {
         clearTimeout(timeout);
         setLoading(false);
