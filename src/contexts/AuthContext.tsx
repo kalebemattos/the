@@ -94,7 +94,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // 🔹 LOGIN
   const signIn = async (email: string, password: string) => {
-    console.log('[Auth] Iniciando signIn...');
+    // Limpa sessão local antes de logar para evitar deadlock no storage lock
+    try { await supabase.auth.signOut({ scope: 'local' }); } catch {}
 
     try {
       const result = await Promise.race([
