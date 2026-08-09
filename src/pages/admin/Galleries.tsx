@@ -304,7 +304,8 @@ export default function AdminGalleries() {
       const numB = parseInt(b.name.replace('roteiro-dia-', ''), 10);
       return numA - numB;
     });
-  const siteGalleries = galleries.filter(g => !g.house_id && !g.name.startsWith('roteiro-dia-'));
+  const experienciasGallery = galleries.find(g => g.name === 'galeria-principal') ?? null;
+  const siteGalleries = galleries.filter(g => !g.house_id && !g.name.startsWith('roteiro-dia-') && g.name !== 'galeria-principal');
 
   if (loading) {
     return (
@@ -447,6 +448,36 @@ export default function AdminGalleries() {
                   </div>
                 );
               })}
+            </CardContent>
+          </Card>
+
+          {/* Galeria de Experiências */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <ImageIcon className="h-4 w-4 text-primary" />
+                Galeria de Experiências
+              </CardTitle>
+              <CardDescription>Grade de fotos na página inicial do site</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {experienciasGallery ? (
+                <div
+                  className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                    selectedGallery?.id === experienciasGallery.id
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                  onClick={() => setSelectedGallery(experienciasGallery)}
+                >
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                    <span className="font-medium text-sm">Clique para gerenciar as fotos</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm text-center py-2">Galeria não encontrada</p>
+              )}
             </CardContent>
           </Card>
 
