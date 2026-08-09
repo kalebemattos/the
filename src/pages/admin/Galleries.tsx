@@ -53,6 +53,7 @@ export default function AdminGalleries() {
   const [selectedGallery, setSelectedGallery] = useState<Gallery | null>(null);
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingGallery, setEditingGallery] = useState<Gallery | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -76,6 +77,7 @@ export default function AdminGalleries() {
 
   const fetchGalleries = async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const { data, error } = await supabase
         .from('galleries')
@@ -84,12 +86,13 @@ export default function AdminGalleries() {
 
       if (error) throw error;
       setGalleries(data || []);
-      
+
       if (data && data.length > 0 && !selectedGallery) {
         setSelectedGallery(data[0]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching galleries:', error);
+      setFetchError(error?.message || 'Erro ao carregar galerias');
       toast.error('Erro ao carregar galerias');
     } finally {
       setLoading(false);
@@ -326,6 +329,21 @@ export default function AdminGalleries() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
+        <p className="text-destructive font-medium">Erro ao carregar galerias</p>
+        <p className="text-muted-foreground text-sm max-w-md">{fetchError}</p>
+        <button
+          onClick={fetchGalleries}
+          className="text-sm underline text-primary"
+        >
+          Tentar novamente
+        </button>
       </div>
     );
   }

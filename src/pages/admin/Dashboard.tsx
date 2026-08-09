@@ -26,7 +26,8 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
-  const { isAdmin } = useAuth();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [stats, setStats] = useState<DashboardStats>({
     totalSalesToday: 0,
     totalSalesMonth: 0,
@@ -43,28 +44,6 @@ export default function AdminDashboard() {
 
   const fetchStats = async () => {
     try {
-      const today = new Date();
-      const monthStart = format(startOfMonth(today), 'yyyy-MM-dd');
-      const monthEnd = format(endOfMonth(today), 'yyyy-MM-dd');
-      const todayStart = format(startOfDay(today), 'yyyy-MM-dd');
-      const todayEnd = format(endOfDay(today), 'yyyy-MM-dd');
-
-      // Sales today
-      const { data: salesToday } = await supabase
-        .from('sales')
-        .select('amount')
-        .gte('sale_date', todayStart)
-        .lte('sale_date', todayEnd)
-        .eq('status', 'paid');
-
-      // Sales this month
-      const { data: salesMonth } = await supabase
-        .from('sales')
-        .select('amount')
-        .gte('sale_date', monthStart)
-        .lte('sale_date', monthEnd)
-        .eq('status', 'paid');
-
       // Galleries count
       const { count: galleriesCount } = await supabase
         .from('galleries')
@@ -74,18 +53,18 @@ export default function AdminDashboard() {
       let usersCount = 0;
       if (isAdmin) {
         const { count } = await supabase
-          .from('profiles')
+          .from('users_meta')
           .select('*', { count: 'exact', head: true });
         usersCount = count || 0;
       }
 
       setStats({
-        totalSalesToday: salesToday?.reduce((acc, sale) => acc + Number(sale.amount), 0) || 0,
-        totalSalesMonth: salesMonth?.reduce((acc, sale) => acc + Number(sale.amount), 0) || 0,
+        totalSalesToday: 0,
+        totalSalesMonth: 0,
         totalGalleries: galleriesCount || 0,
         totalUsers: usersCount,
-        salesCountToday: salesToday?.length || 0,
-        salesCountMonth: salesMonth?.length || 0,
+        salesCountToday: 0,
+        salesCountMonth: 0,
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
