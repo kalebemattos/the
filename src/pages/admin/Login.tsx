@@ -53,6 +53,12 @@ if (user && isAdminOrOperator) {
     setIsLoading(true);
 
     try {
+      // Timeout de segurança para não travar indefinidamente
+      const authTimeout = setTimeout(() => {
+        setIsLoading(false);
+        toast.error('Tempo esgotado. Verifique sua conexão e tente novamente.');
+      }, 10000);
+
       if (isSignUp) {
         const result = signupSchema.safeParse(formData);
         if (!result.success) {
@@ -94,6 +100,7 @@ if (user && isAdminOrOperator) {
     } catch (error) {
       toast.error('Erro inesperado. Tente novamente.');
     } finally {
+      clearTimeout(authTimeout);
       setIsLoading(false);
     }
   };
