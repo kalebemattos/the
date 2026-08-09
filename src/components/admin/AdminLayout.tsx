@@ -19,7 +19,7 @@ export function AdminLayout() {
   const role = user?.role;
 
   const location = useLocation();
-  const currentPath = location.hash.replace('#', '');
+  const currentPath = location.pathname;
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (loading) {

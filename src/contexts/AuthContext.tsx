@@ -50,39 +50,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    // Timeout de segurança: garante que loading vira false mesmo se Supabase travar
-    const timeout = setTimeout(() => setLoading(false), 5000);
+    // Timeout de segurança — garante loading=false mesmo se Supabase não responder
+    const timeout = setTimeout(() => setLoading(false), 8000);
 
-    const init = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        const session = data?.session;
-        const isExpired = session && session.expires_at && session.expires_at < Math.floor(Date.now() / 1000);
-        if (error || isExpired) {
-          // Sessão inválida ou expirada — limpa para evitar loop de refresh
-          await supabase.auth.signOut();
-        } else if (session?.user) {
-          await loadUser(session.user);
-        }
-      } catch (e) {
-        console.error('Erro ao inicializar auth:', e);
-        // Garante limpeza em caso de erro inesperado
-        try { await supabase.auth.signOut(); } catch {}
-      } finally {
-        clearTimeout(timeout);
-        setLoading(false);
-      }
-    };
-
-    init();
-
+    // onAuthStateChange dispara na inicialização com a sessão atual
+    // Isso cobre tanto login normal quanto recovery flow (reset de senha)
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         if (session?.user) {
           await loadUser(session.user);
         } else {
           setUser(null);
         }
+        // Após o primeiro evento de inicialização, podemos parar o loading
+        clearTimeout(timeout);
+        setLoading(false);
       }
     );
 
@@ -149,7 +131,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // 🔹 RESET DE SENHA
   const resetPassword = async (email: string) => {
     return supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://thebestofangra.vercel.app/admin/reset",
+      redirectTo: `${window.location.origin}/admin/reset`,
     });
   };
 

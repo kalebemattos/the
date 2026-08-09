@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Limpa sessão expirada antes de criar o cliente
+// Remove sessão expirada antes de criar o cliente
+// Evita que o SDK tente renovar um token inválido (projeto pausado no free tier)
 try {
   const key = "sb-caqdwewivcqngmetscha-auth-token";
   const raw = localStorage.getItem(key);
@@ -21,15 +22,7 @@ export const supabase = createClient(
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: false,
-      // Usa steal:true para quebrar locks travados quando o projeto pausa/restaura
-      // Evita deadlock sem desabilitar completamente a serialização do SDK
-      lock: async (name: string, _acquireTimeout: number, fn: () => Promise<any>) => {
-        if (typeof navigator !== "undefined" && navigator.locks) {
-          return navigator.locks.request(name, { steal: true }, fn);
-        }
-        return await fn();
-      },
+      detectSessionInUrl: true, // necessário para recovery flow (reset de senha)
     },
   }
 );
