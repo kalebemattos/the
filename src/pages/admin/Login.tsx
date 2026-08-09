@@ -200,16 +200,28 @@ if (user && isAdminOrOperator) {
             </Button>
           </form>
 
-          <div className="mt-4 text-center">
+          <div className="mt-4 text-center space-y-2">
             <button
               type="button"
-              className="text-sm text-primary hover:underline"
+              className="text-sm text-primary hover:underline block w-full"
               onClick={() => {
                 setIsSignUp(!isSignUp);
                 setFormData({ email: '', password: '', confirmPassword: '', fullName: '' });
               }}
             >
               {isSignUp ? 'Já tem uma conta? Entrar' : 'Não tem uma conta? Cadastre-se'}
+            </button>
+            <button
+              type="button"
+              className="text-xs text-muted-foreground hover:underline"
+              onClick={async () => {
+                const { supabase } = await import('@/integrations/supabase/client');
+                await supabase.auth.signOut();
+                Object.keys(localStorage).filter(k => k.includes('sb-')).forEach(k => localStorage.removeItem(k));
+                window.location.reload();
+              }}
+            >
+              Problemas para entrar? Limpar sessão
             </button>
           </div>
         </CardContent>
