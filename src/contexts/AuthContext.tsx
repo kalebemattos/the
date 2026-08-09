@@ -56,15 +56,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // onAuthStateChange dispara na inicialização com a sessão atual
     // Isso cobre tanto login normal quanto recovery flow (reset de senha)
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        // NÃO usar async/await aqui — o SDK aguarda o callback antes de liberar o
+        // Web Lock, então await loadUser causaria deadlock em signInWithPassword.
         if (session?.user) {
-          await loadUser(session.user);
+          // Fire-and-forget: libera o lock imediatamente, carrega user em paralelo
+          loadUser(session.user).then(() => {
+            clearTimeout(timeout);
+            setLoading(false);
+          }).catch(() => {
+            setUser(null);
+            clearTimeout(timeout);
+            setLoading(false);
+          });
         } else {
           setUser(null);
+          clearTimeout(timeout);
+          setLoading(false);
         }
-        // Após o primeiro evento de inicialização, podemos parar o loading
-        clearTimeout(timeout);
-        setLoading(false);
       }
     );
 
