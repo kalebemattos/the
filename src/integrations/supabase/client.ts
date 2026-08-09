@@ -22,9 +22,12 @@ export const supabase = createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: false,
-      // Substitui o Web Locks API por lock simples — evita deadlock quando
-      // o projeto Supabase pausa/restaura e o lock anterior fica preso
-      lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => {
+      // Usa steal:true para quebrar locks travados quando o projeto pausa/restaura
+      // Evita deadlock sem desabilitar completamente a serialização do SDK
+      lock: async (name: string, _acquireTimeout: number, fn: () => Promise<any>) => {
+        if (typeof navigator !== "undefined" && navigator.locks) {
+          return navigator.locks.request(name, { steal: true }, fn);
+        }
         return await fn();
       },
     },
