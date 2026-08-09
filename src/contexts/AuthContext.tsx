@@ -56,11 +56,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const init = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
-        if (error) {
-          // Sessão inválida — limpa o storage para evitar loop de refresh
+        const session = data?.session;
+        const isExpired = session && session.expires_at && session.expires_at < Math.floor(Date.now() / 1000);
+        if (error || isExpired) {
+          // Sessão inválida ou expirada — limpa para evitar loop de refresh
           await supabase.auth.signOut();
-        } else if (data?.session?.user) {
-          await loadUser(data.session.user);
+        } else if (session?.user) {
+          await loadUser(session.user);
         }
       } catch (e) {
         console.error('Erro ao inicializar auth:', e);
