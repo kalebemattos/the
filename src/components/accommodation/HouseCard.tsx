@@ -26,8 +26,8 @@ export function HouseCard({ house, onViewDetails }: HouseCardProps) {
   const HighlightIcon = getHighlightIcon();
 
   return (
-    <Card className="group overflow-hidden border-primary/20 hover-lift bg-card/80 backdrop-blur-sm">
-      <div className="relative h-48 bg-gradient-ocean flex items-center justify-center overflow-hidden">
+    <Card className="group overflow-hidden border-primary/20 hover-lift bg-card/80 backdrop-blur-sm flex flex-col h-full">
+      <div className="relative h-48 bg-gradient-ocean flex items-center justify-center overflow-hidden shrink-0">
         {house.coverImage ? (
           <img 
             src={house.coverImage} 
@@ -53,12 +53,12 @@ export function HouseCard({ house, onViewDetails }: HouseCardProps) {
         </div>
       </div>
       
-      <CardContent className="p-5 space-y-4">
+      <CardContent className="p-5 flex flex-col flex-1 gap-4">
         <p className="text-sm font-medium text-primary italic">
           "{getLocalizedText(house.tagline)}"
         </p>
-        
-        <p className="text-sm text-muted-foreground line-clamp-2">
+
+        <p className="text-sm text-muted-foreground line-clamp-2 flex-1">
           {getLocalizedText(house.description)}
         </p>
 
@@ -78,7 +78,7 @@ export function HouseCard({ house, onViewDetails }: HouseCardProps) {
         <Button
           onClick={() => onViewDetails(house)}
           variant="outline"
-          className="w-full group/btn border-primary/30 hover:bg-primary hover:text-primary-foreground"
+          className="w-full group/btn border-primary/30 hover:bg-primary hover:text-primary-foreground mt-auto"
         >
           {t('Ver Detalhes', 'View Details', 'Ver Detalles', 'Voir les Détails')}
           <ChevronRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
