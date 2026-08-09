@@ -28,6 +28,7 @@ export default function AdminLogin() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMsg, setLoadingMsg] = useState('Entrando...');
 
   const [formData, setFormData] = useState({
     email: '',
@@ -51,12 +52,19 @@ if (user && isAdminOrOperator) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setLoadingMsg('Entrando...');
 
-    // Timeout de segurança fora do try para ficar acessível no finally
+    // Após 8s, informa que o servidor está acordando (cold start Supabase free tier)
+    const slowTimer = setTimeout(() => {
+      setLoadingMsg('Servidor iniciando, aguarde...');
+    }, 8000);
+
+    // Timeout de segurança — 35s para garantir que o loading não trava pra sempre
     const authTimeout = setTimeout(() => {
+      clearTimeout(slowTimer);
       setIsLoading(false);
-      toast.error('Tempo esgotado. Verifique sua conexão e tente novamente.');
-    }, 10000);
+      setLoadingMsg('Entrando...');
+    }, 35000);
 
     try {
       if (isSignUp) {
@@ -101,7 +109,9 @@ if (user && isAdminOrOperator) {
       toast.error('Erro inesperado. Tente novamente.');
     } finally {
       clearTimeout(authTimeout);
+      clearTimeout(slowTimer);
       setIsLoading(false);
+      setLoadingMsg('Entrando...');
     }
   };
 
@@ -196,7 +206,7 @@ if (user && isAdminOrOperator) {
             )}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Carregando...' : isSignUp ? 'Criar Conta' : 'Entrar'}
+              {isLoading ? loadingMsg : isSignUp ? 'Criar Conta' : 'Entrar'}
             </Button>
           </form>
 

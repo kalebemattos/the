@@ -94,17 +94,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // 🔹 LOGIN
   const signIn = async (email: string, password: string) => {
-
     try {
+      // Timeout generoso para permitir cold start do Supabase (plano gratuito pausa projetos)
       const result = await Promise.race([
         supabase.auth.signInWithPassword({ email, password }),
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('TIMEOUT_AUTH')), 8000)
+          setTimeout(() => reject(new Error('TIMEOUT_AUTH')), 30000)
         ),
       ]) as Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>;
 
       const { data, error } = result;
-      console.log('[Auth] Resultado signIn:', { error: error?.message, hasUser: !!data?.user });
 
       if (!error && data.user) {
         try {
@@ -119,9 +118,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       return { error };
     } catch (e: any) {
-      console.error('[Auth] Erro no signIn:', e?.message);
       const msg = e?.message === 'TIMEOUT_AUTH'
-        ? 'Servidor não respondeu (timeout). Tente novamente em alguns minutos.'
+        ? 'Servidor demorou para responder. Tente novamente.'
         : e?.message || 'Erro desconhecido';
       return { error: { message: msg } };
     }
