@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -15,8 +14,10 @@ import {
   Trash2,
   Image as ImageIcon,
   Upload,
-  GripVertical,
-  X
+  X,
+  Home,
+  Globe,
+  CheckCircle2,
 } from 'lucide-react';
 
 const HOUSES = [
@@ -57,22 +58,16 @@ export default function AdminGalleries() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingGallery, setEditingGallery] = useState<Gallery | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [creatingHouse, setCreatingHouse] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    house_id: '',
-  });
+  const [formData, setFormData] = useState({ name: '', description: '' });
+
+  useEffect(() => { fetchGalleries(); }, []);
 
   useEffect(() => {
-    fetchGalleries();
-  }, []);
-
-  useEffect(() => {
-    if (selectedGallery) {
-      fetchGalleryImages(selectedGallery.id);
-    }
+    if (selectedGallery) fetchGalleryImages(selectedGallery.id);
+    else setGalleryImages([]);
   }, [selectedGallery]);
 
   const fetchGalleries = async () => {
@@ -86,10 +81,6 @@ export default function AdminGalleries() {
 
       if (error) throw error;
       setGalleries(data || []);
-
-      if (data && data.length > 0 && !selectedGallery) {
-        setSelectedGallery(data[0]);
-      }
     } catch (error: any) {
       console.error('Error fetching galleries:', error);
       setFetchError(error?.message || 'Erro ao carregar galerias');
@@ -115,9 +106,35 @@ export default function AdminGalleries() {
     }
   };
 
+  // Create a gallery for a specific house automatically
+  const createHouseGallery = async (house: typeof HOUSES[0]) => {
+    setCreatingHouse(house.id);
+    try {
+      const { data, error } = await supabase
+        .from('galleries')
+        .insert([{
+          name: `Galeria - ${house.label}`,
+          description: `Fotos da ${house.label}`,
+          display_order: galleries.length,
+          house_id: house.id,
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      toast.success(`Galeria da ${house.label} criada!`);
+      await fetchGalleries();
+      if (data) setSelectedGallery(data);
+    } catch (error) {
+      console.error('Error creating house gallery:', error);
+      toast.error('Erro ao criar galeria da casa');
+    } finally {
+      setCreatingHouse(null);
+    }
+  };
+
   const handleSubmitGallery = async (e: React.FormEvent) => {
     e.preventDefault();
-
     try {
       const validatedData = gallerySchema.parse(formData);
 
@@ -127,24 +144,29 @@ export default function AdminGalleries() {
           .update({
             name: validatedData.name,
             description: validatedData.description || null,
-            house_id: formData.house_id || null,
           })
           .eq('id', editingGallery.id);
 
         if (error) throw error;
         toast.success('Galeria atualizada');
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('galleries')
           .insert([{
             name: validatedData.name,
             description: validatedData.description || null,
             display_order: galleries.length,
-            house_id: formData.house_id || null,
-          }]);
+            house_id: null,
+          }])
+          .select()
+          .single();
 
         if (error) throw error;
         toast.success('Galeria criada');
+        if (data) {
+          await fetchGalleries();
+          setSelectedGallery(data);
+        }
       }
 
       setDialogOpen(false);
@@ -161,12 +183,9 @@ export default function AdminGalleries() {
   };
 
   const handleDeleteGallery = async (gallery: Gallery) => {
-    if (!confirm(`Tem certeza que deseja excluir a galeria "${gallery.name}"? Todas as imagens serão removidas.`)) {
-      return;
-    }
+    if (!confirm(`Excluir a galeria "${gallery.name}"? Todas as imagens serão removidas.`)) return;
 
     try {
-      // Delete images from storage first
       const { data: images } = await supabase
         .from('gallery_images')
         .select('url')
@@ -174,22 +193,16 @@ export default function AdminGalleries() {
 
       if (images) {
         for (const image of images) {
-          const path = image.url.split('/').pop();
-          if (path) {
-            await supabase.storage.from('galeria').remove([path]);
-          }
+          const path = image.url.split('/storage/v1/object/public/galeria/').pop();
+          if (path) await supabase.storage.from('galeria').remove([path]);
         }
       }
 
-      const { error } = await supabase
-        .from('galleries')
-        .delete()
-        .eq('id', gallery.id);
-
+      const { error } = await supabase.from('galleries').delete().eq('id', gallery.id);
       if (error) throw error;
-      
+
       toast.success('Galeria excluída');
-      setSelectedGallery(null);
+      if (selectedGallery?.id === gallery.id) setSelectedGallery(null);
       fetchGalleries();
     } catch (error) {
       console.error('Error deleting gallery:', error);
@@ -202,56 +215,51 @@ export default function AdminGalleries() {
 
     setUploading(true);
     const files = Array.from(e.target.files);
+    let successCount = 0;
 
     try {
       for (const file of files) {
-        // Validate file
         if (!file.type.startsWith('image/')) {
           toast.error(`${file.name} não é uma imagem`);
           continue;
         }
-
         if (file.size > 5 * 1024 * 1024) {
           toast.error(`${file.name} excede 5MB`);
           continue;
         }
 
-        // Upload to storage
-        const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+        const fileName = `${selectedGallery.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
           .from('galeria')
           .upload(fileName, file);
 
-        if (uploadError) throw uploadError;
+        if (uploadError) { toast.error(`Erro ao enviar ${file.name}`); continue; }
 
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from('galeria')
-          .getPublicUrl(fileName);
+        const { data: urlData } = supabase.storage.from('galeria').getPublicUrl(fileName);
 
-        // Save to database
-        const { error: dbError } = await supabase
-          .from('gallery_images')
-          .insert([{
-            gallery_id: selectedGallery.id,
-            url: urlData.publicUrl,
-            alt_text: file.name,
-            display_order: galleryImages.length,
-          }]);
+        const { error: dbError } = await supabase.from('gallery_images').insert([{
+          gallery_id: selectedGallery.id,
+          url: urlData.publicUrl,
+          alt_text: file.name.replace(/\.[^/.]+$/, ''),
+          display_order: galleryImages.length + successCount,
+        }]);
 
-        if (dbError) throw dbError;
+        if (dbError) { toast.error(`Erro ao salvar ${file.name}`); continue; }
+        successCount++;
       }
 
-      toast.success('Imagens enviadas');
-      fetchGalleryImages(selectedGallery.id);
+      if (successCount > 0) {
+        toast.success(`${successCount} imagem${successCount > 1 ? 'ns' : ''} enviada${successCount > 1 ? 's' : ''}`);
+        fetchGalleryImages(selectedGallery.id);
+      }
     } catch (error) {
       console.error('Error uploading images:', error);
       toast.error('Erro ao enviar imagens');
     } finally {
       setUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -259,76 +267,41 @@ export default function AdminGalleries() {
     if (!confirm('Excluir esta imagem?')) return;
 
     try {
-      // Delete from storage
-      const path = image.url.split('/').pop();
-      if (path) {
-        await supabase.storage.from('galeria').remove([path]);
-      }
+      const path = image.url.split('/storage/v1/object/public/galeria/').pop();
+      if (path) await supabase.storage.from('galeria').remove([path]);
 
-      // Delete from database
-      const { error } = await supabase
-        .from('gallery_images')
-        .delete()
-        .eq('id', image.id);
-
+      const { error } = await supabase.from('gallery_images').delete().eq('id', image.id);
       if (error) throw error;
-      
+
       toast.success('Imagem excluída');
-      if (selectedGallery) {
-        fetchGalleryImages(selectedGallery.id);
-      }
+      if (selectedGallery) fetchGalleryImages(selectedGallery.id);
     } catch (error) {
       console.error('Error deleting image:', error);
       toast.error('Erro ao excluir imagem');
     }
   };
 
-  const updateImageOrder = async (imageId: string, newOrder: number) => {
-    try {
-      const { error } = await supabase
-        .from('gallery_images')
-        .update({ display_order: newOrder })
-        .eq('id', imageId);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error updating image order:', error);
-    }
-  };
-
-  const moveImage = async (index: number, direction: 'up' | 'down') => {
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= galleryImages.length) return;
-
-    const newImages = [...galleryImages];
-    [newImages[index], newImages[newIndex]] = [newImages[newIndex], newImages[index]];
-
-    setGalleryImages(newImages);
-
-    // Update orders in database
-    await updateImageOrder(newImages[index].id, index);
-    await updateImageOrder(newImages[newIndex].id, newIndex);
-  };
-
   const resetForm = () => {
-    setFormData({ name: '', description: '', house_id: '' });
+    setFormData({ name: '', description: '' });
     setEditingGallery(null);
   };
 
   const openEditDialog = (gallery: Gallery) => {
     setEditingGallery(gallery);
-    setFormData({
-      name: gallery.name,
-      description: gallery.description || '',
-      house_id: gallery.house_id || '',
-    });
+    setFormData({ name: gallery.name, description: gallery.description || '' });
     setDialogOpen(true);
   };
+
+  // Split galleries: house galleries vs site galleries
+  const houseGalleriesMap = Object.fromEntries(
+    galleries.filter(g => g.house_id).map(g => [g.house_id!, g])
+  );
+  const siteGalleries = galleries.filter(g => !g.house_id);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
       </div>
     );
   }
@@ -338,10 +311,7 @@ export default function AdminGalleries() {
       <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
         <p className="text-destructive font-medium">Erro ao carregar galerias</p>
         <p className="text-muted-foreground text-sm max-w-md">{fetchError}</p>
-        <button
-          onClick={fetchGalleries}
-          className="text-sm underline text-primary"
-        >
+        <button onClick={fetchGalleries} className="text-sm underline text-primary">
           Tentar novamente
         </button>
       </div>
@@ -353,25 +323,21 @@ export default function AdminGalleries() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Galerias</h1>
-          <p className="text-muted-foreground">Gerencie as galerias de imagens do site</p>
+          <p className="text-muted-foreground">Gerencie as imagens das casas e do site</p>
         </div>
-        
-        <Dialog open={dialogOpen} onOpenChange={(open) => {
-          setDialogOpen(open);
-          if (!open) resetForm();
-        }}>
+
+        {/* Dialog para galerias do site */}
+        <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button>
+            <Button variant="outline">
               <Plus className="mr-2 h-4 w-4" />
-              Nova Galeria
+              Nova Galeria do Site
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{editingGallery ? 'Editar Galeria' : 'Nova Galeria'}</DialogTitle>
-              <DialogDescription>
-                Preencha os dados da galeria
-              </DialogDescription>
+              <DialogTitle>{editingGallery ? 'Editar Galeria' : 'Nova Galeria do Site'}</DialogTitle>
+              <DialogDescription>Galeria exibida nas seções do site</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmitGallery} className="space-y-4">
               <div className="space-y-2">
@@ -380,29 +346,10 @@ export default function AdminGalleries() {
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Ex: Galeria Principal"
                   required
                 />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="house_id">Casa (opcional)</Label>
-                <Select
-                  value={formData.house_id}
-                  onValueChange={(value) => setFormData({ ...formData, house_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma casa..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {HOUSES.map((house) => (
-                      <SelectItem key={house.id} value={house.id}>
-                        {house.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="description">Descrição</Label>
                 <Textarea
@@ -412,11 +359,8 @@ export default function AdminGalleries() {
                   rows={3}
                 />
               </div>
-
               <DialogFooter>
-                <Button type="submit">
-                  {editingGallery ? 'Atualizar' : 'Criar'}
-                </Button>
+                <Button type="submit">{editingGallery ? 'Atualizar' : 'Criar'}</Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -424,74 +368,138 @@ export default function AdminGalleries() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Galleries List */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>Galerias</CardTitle>
-            <CardDescription>{galleries.length} galerias</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {galleries.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">
-                Nenhuma galeria criada
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {galleries.map((gallery) => (
+        {/* Left panel: gallery list */}
+        <div className="lg:col-span-1 space-y-4">
+
+          {/* House galleries */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Home className="h-4 w-4 text-primary" />
+                Galerias das Casas
+              </CardTitle>
+              <CardDescription>Uma galeria por acomodação</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {HOUSES.map((house) => {
+                const gallery = houseGalleriesMap[house.id];
+                const isSelected = selectedGallery?.id === gallery?.id;
+
+                return gallery ? (
                   <div
-                    key={gallery.id}
+                    key={house.id}
                     className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                      selectedGallery?.id === gallery.id
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50'
+                      isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
                     }`}
                     onClick={() => setSelectedGallery(gallery)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 min-w-0">
-                        <ImageIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <div className="min-w-0">
-                          <span className="font-medium block truncate">{gallery.name}</span>
-                          {gallery.house_id && (
-                            <span className="text-xs text-primary">
-                              {HOUSES.find(h => h.id === gallery.house_id)?.label ?? gallery.house_id}
-                            </span>
-                          )}
-                        </div>
+                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                        <span className="font-medium text-sm">{house.label}</span>
                       </div>
                       <div className="flex gap-1">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openEditDialog(gallery);
-                          }}
+                          className="h-7 w-7"
+                          onClick={(e) => { e.stopPropagation(); openEditDialog(gallery); }}
                         >
                           <Pencil className="h-3 w-3" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteGallery(gallery);
-                          }}
+                          className="h-7 w-7"
+                          onClick={(e) => { e.stopPropagation(); handleDeleteGallery(gallery); }}
                         >
                           <Trash2 className="h-3 w-3 text-destructive" />
                         </Button>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                ) : (
+                  <div
+                    key={house.id}
+                    className="p-3 rounded-lg border border-dashed border-muted-foreground/30 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/40 shrink-0" />
+                      <span className="text-sm text-muted-foreground">{house.label}</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      disabled={creatingHouse === house.id}
+                      onClick={() => createHouseGallery(house)}
+                    >
+                      {creatingHouse === house.id ? '...' : 'Criar'}
+                    </Button>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
 
-        {/* Gallery Images */}
+          {/* Site galleries */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Globe className="h-4 w-4 text-primary" />
+                Galerias do Site
+              </CardTitle>
+              <CardDescription>Seções de imagens do site</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {siteGalleries.length === 0 ? (
+                <p className="text-muted-foreground text-sm text-center py-2">
+                  Nenhuma galeria do site
+                </p>
+              ) : (
+                siteGalleries.map((gallery) => {
+                  const isSelected = selectedGallery?.id === gallery.id;
+                  return (
+                    <div
+                      key={gallery.id}
+                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                        isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                      }`}
+                      onClick={() => setSelectedGallery(gallery)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <ImageIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <span className="font-medium text-sm truncate">{gallery.name}</span>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={(e) => { e.stopPropagation(); openEditDialog(gallery); }}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={(e) => { e.stopPropagation(); handleDeleteGallery(gallery); }}
+                          >
+                            <Trash2 className="h-3 w-3 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right panel: image management */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <div className="flex justify-between items-center">
@@ -500,7 +508,9 @@ export default function AdminGalleries() {
                   {selectedGallery ? selectedGallery.name : 'Selecione uma galeria'}
                 </CardTitle>
                 <CardDescription>
-                  {selectedGallery ? `${galleryImages.length} imagens` : 'Escolha uma galeria para gerenciar as imagens'}
+                  {selectedGallery
+                    ? `${galleryImages.length} imagem${galleryImages.length !== 1 ? 'ns' : ''}`
+                    : 'Escolha uma galeria na lista ao lado'}
                 </CardDescription>
               </div>
               {selectedGallery && (
@@ -513,10 +523,7 @@ export default function AdminGalleries() {
                     multiple
                     onChange={handleUploadImages}
                   />
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                  >
+                  <Button onClick={() => fileInputRef.current?.click()} disabled={uploading}>
                     <Upload className="mr-2 h-4 w-4" />
                     {uploading ? 'Enviando...' : 'Upload'}
                   </Button>
@@ -526,50 +533,43 @@ export default function AdminGalleries() {
           </CardHeader>
           <CardContent>
             {!selectedGallery ? (
-              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <ImageIcon className="h-12 w-12 mb-4" />
-                <p>Selecione uma galeria para ver as imagens</p>
+              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                <ImageIcon className="h-12 w-12 mb-4 opacity-30" />
+                <p>Selecione uma galeria para gerenciar as imagens</p>
               </div>
             ) : galleryImages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <ImageIcon className="h-12 w-12 mb-4" />
-                <p>Nenhuma imagem nesta galeria</p>
-                <p className="text-sm">Clique em Upload para adicionar imagens</p>
+              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                <Upload className="h-12 w-12 mb-4 opacity-30" />
+                <p className="font-medium">Nenhuma imagem ainda</p>
+                <p className="text-sm mt-1">Clique em Upload para adicionar fotos</p>
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {galleryImages.map((image, index) => (
+                {galleryImages.map((image) => (
                   <div
                     key={image.id}
-                    className="relative group aspect-square rounded-lg overflow-hidden border"
+                    className="relative group aspect-square rounded-lg overflow-hidden border bg-muted"
                   >
                     <img
                       src={image.url}
                       alt={image.alt_text || ''}
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => moveImage(index, 'up')}
-                        disabled={index === 0}
-                      >
-                        <GripVertical className="h-4 w-4" />
-                      </Button>
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <Button
                         variant="destructive"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-9 w-9"
                         onClick={() => handleDeleteImage(image)}
                       >
-                        <X className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                    <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                      #{index + 1}
-                    </div>
+                    {image.alt_text && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs px-2 py-1 truncate opacity-0 group-hover:opacity-100 transition-opacity">
+                        {image.alt_text}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

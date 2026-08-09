@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 import heroImage from '@/assets/hero-angra.jpg';
 import day2 from '@/assets/day2-boat-tour.jpg';
 import day3 from '@/assets/day3-waterfall.jpg';
@@ -7,18 +9,56 @@ import day5 from '@/assets/day5-paraty.jpg';
 import day7 from '@/assets/day7-relaxation.jpg';
 import day9 from '@/assets/day9-sunset-boat.jpg';
 
+const STATIC_IMAGES = [
+  { src: heroImage, alt: 'Angra dos Reis Aerial View' },
+  { src: day2, alt: 'Boat Tour' },
+  { src: day3, alt: 'Waterfall' },
+  { src: day4, alt: 'Beach' },
+  { src: day5, alt: 'Paraty' },
+  { src: day7, alt: 'Relaxation' },
+  { src: day9, alt: 'Sunset' },
+];
+
 export function Gallery() {
   const { t } = useLanguage();
+  const [images, setImages] = useState<{ src: string; alt: string }[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
-  const images = [
-    { src: heroImage, alt: 'Angra dos Reis Aerial View' },
-    { src: day2, alt: 'Boat Tour' },
-    { src: day3, alt: 'Waterfall' },
-    { src: day4, alt: 'Beach' },
-    { src: day5, alt: 'Paraty' },
-    { src: day7, alt: 'Relaxation' },
-    { src: day9, alt: 'Sunset' },
-  ];
+  useEffect(() => {
+    const fetchGallery = async () => {
+      try {
+        // Look for a site gallery named 'galeria-principal' (no house_id)
+        const { data: gallery } = await supabase
+          .from('galleries')
+          .select('id')
+          .eq('name', 'galeria-principal')
+          .is('house_id', null)
+          .maybeSingle();
+
+        if (gallery) {
+          const { data: imgs } = await supabase
+            .from('gallery_images')
+            .select('url, alt_text')
+            .eq('gallery_id', gallery.id)
+            .order('display_order', { ascending: true });
+
+          if (imgs && imgs.length > 0) {
+            setImages(imgs.map(img => ({ src: img.url, alt: img.alt_text || '' })));
+            setLoaded(true);
+            return;
+          }
+        }
+      } catch {
+        // fall through to static images
+      }
+      setImages(STATIC_IMAGES);
+      setLoaded(true);
+    };
+
+    fetchGallery();
+  }, []);
+
+  const displayImages = loaded ? images : STATIC_IMAGES;
 
   return (
     <section id="gallery" className="py-20 bg-muted">
@@ -42,7 +82,7 @@ export function Gallery() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto">
-          {images.map((image, index) => (
+          {displayImages.map((image, index) => (
             <div
               key={index}
               className={`group relative overflow-hidden rounded-2xl shadow-card hover-lift cursor-pointer ${
