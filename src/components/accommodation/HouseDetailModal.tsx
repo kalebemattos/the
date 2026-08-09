@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Dialog,
@@ -21,6 +22,7 @@ import {
   ImageIcon,
   X,
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import type { AccommodationData } from '@/data/accommodations';
 
 interface HouseDetailModalProps {
@@ -31,6 +33,41 @@ interface HouseDetailModalProps {
 
 export function HouseDetailModal({ house, open, onClose }: HouseDetailModalProps) {
   const { language, t } = useLanguage();
+  const [images, setImages] = useState<string[]>([]);
+  const [loadingImages, setLoadingImages] = useState(false);
+
+  useEffect(() => {
+    if (!house || !open) return;
+
+    const fetchImages = async () => {
+      setLoadingImages(true);
+      try {
+        const { data: gallery } = await supabase
+          .from('galleries')
+          .select('id')
+          .eq('house_id', house.id)
+          .single();
+
+        if (gallery) {
+          const { data: galleryImages } = await supabase
+            .from('gallery_images')
+            .select('url')
+            .eq('gallery_id', gallery.id)
+            .order('display_order', { ascending: true });
+
+          setImages(galleryImages?.map((img) => img.url) ?? []);
+        } else {
+          setImages([]);
+        }
+      } catch {
+        setImages([]);
+      } finally {
+        setLoadingImages(false);
+      }
+    };
+
+    fetchImages();
+  }, [house, open]);
 
   if (!house) return null;
 
@@ -68,11 +105,15 @@ export function HouseDetailModal({ house, open, onClose }: HouseDetailModalProps
               <ImageIcon className="w-5 h-5 text-primary" />
               {t('Galeria de Fotos', 'Photo Gallery', 'Galería de Fotos', 'Galerie Photos')}
             </h4>
-            
-            {house.images.length > 0 ? (
+
+            {loadingImages ? (
+              <div className="flex items-center justify-center py-8 text-muted-foreground">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              </div>
+            ) : images.length > 0 ? (
               <Carousel className="w-full">
                 <CarouselContent>
-                  {house.images.map((image, index) => (
+                  {images.map((image, index) => (
                     <CarouselItem key={index} className="md:basis-1/2">
                       <div className="aspect-video rounded-lg overflow-hidden">
                         <img

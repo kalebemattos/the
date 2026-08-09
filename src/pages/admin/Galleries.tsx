@@ -4,25 +4,34 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { z } from 'zod';
-import { 
-  Plus, 
-  Pencil, 
-  Trash2, 
+import {
+  Plus,
+  Pencil,
+  Trash2,
   Image as ImageIcon,
   Upload,
   GripVertical,
   X
 } from 'lucide-react';
 
+const HOUSES = [
+  { id: 'casa-101', label: 'Casa 101' },
+  { id: 'casa-102', label: 'Casa 102' },
+  { id: 'casa-201', label: 'Casa 201' },
+  { id: 'casa-202', label: 'Casa 202' },
+];
+
 interface Gallery {
   id: string;
   name: string;
   description: string | null;
   display_order: number;
+  house_id: string | null;
   created_at: string;
 }
 
@@ -52,6 +61,7 @@ export default function AdminGalleries() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    house_id: '',
   });
 
   useEffect(() => {
@@ -114,6 +124,7 @@ export default function AdminGalleries() {
           .update({
             name: validatedData.name,
             description: validatedData.description || null,
+            house_id: formData.house_id || null,
           })
           .eq('id', editingGallery.id);
 
@@ -126,6 +137,7 @@ export default function AdminGalleries() {
             name: validatedData.name,
             description: validatedData.description || null,
             display_order: galleries.length,
+            house_id: formData.house_id || null,
           }]);
 
         if (error) throw error;
@@ -161,7 +173,7 @@ export default function AdminGalleries() {
         for (const image of images) {
           const path = image.url.split('/').pop();
           if (path) {
-            await supabase.storage.from('gallery-images').remove([path]);
+            await supabase.storage.from('galeria').remove([path]);
           }
         }
       }
@@ -204,14 +216,14 @@ export default function AdminGalleries() {
         // Upload to storage
         const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('gallery-images')
+          .from('galeria')
           .upload(fileName, file);
 
         if (uploadError) throw uploadError;
 
         // Get public URL
         const { data: urlData } = supabase.storage
-          .from('gallery-images')
+          .from('galeria')
           .getPublicUrl(fileName);
 
         // Save to database
@@ -247,7 +259,7 @@ export default function AdminGalleries() {
       // Delete from storage
       const path = image.url.split('/').pop();
       if (path) {
-        await supabase.storage.from('gallery-images').remove([path]);
+        await supabase.storage.from('galeria').remove([path]);
       }
 
       // Delete from database
@@ -296,7 +308,7 @@ export default function AdminGalleries() {
   };
 
   const resetForm = () => {
-    setFormData({ name: '', description: '' });
+    setFormData({ name: '', description: '', house_id: '' });
     setEditingGallery(null);
   };
 
@@ -305,6 +317,7 @@ export default function AdminGalleries() {
     setFormData({
       name: gallery.name,
       description: gallery.description || '',
+      house_id: gallery.house_id || '',
     });
     setDialogOpen(true);
   };
@@ -354,6 +367,25 @@ export default function AdminGalleries() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="house_id">Casa (opcional)</Label>
+                <Select
+                  value={formData.house_id}
+                  onValueChange={(value) => setFormData({ ...formData, house_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma casa..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {HOUSES.map((house) => (
+                      <SelectItem key={house.id} value={house.id}>
+                        {house.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="description">Descrição</Label>
                 <Textarea
                   id="description"
@@ -398,9 +430,16 @@ export default function AdminGalleries() {
                     onClick={() => setSelectedGallery(gallery)}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{gallery.name}</span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <ImageIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <div className="min-w-0">
+                          <span className="font-medium block truncate">{gallery.name}</span>
+                          {gallery.house_id && (
+                            <span className="text-xs text-primary">
+                              {HOUSES.find(h => h.id === gallery.house_id)?.label ?? gallery.house_id}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="flex gap-1">
                         <Button
