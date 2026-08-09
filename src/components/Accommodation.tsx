@@ -1,12 +1,45 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { accommodations, type AccommodationData } from '@/data/accommodations';
 import { HouseCard } from './accommodation/HouseCard';
 import { HouseDetailModal } from './accommodation/HouseDetailModal';
+import { supabase } from '@/integrations/supabase/client';
 
 export function Accommodation() {
   const { t } = useLanguage();
   const [selectedHouse, setSelectedHouse] = useState<AccommodationData | null>(null);
+  const [coverImages, setCoverImages] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const fetchCovers = async () => {
+      // Busca todas as galerias das casas de uma vez
+      const { data: galleries } = await supabase
+        .from('galleries')
+        .select('id, house_id')
+        .not('house_id', 'is', null);
+
+      if (!galleries?.length) return;
+
+      // Para cada galeria, busca a primeira imagem (a capa)
+      const results = await Promise.all(
+        galleries.map(async (gallery) => {
+          const { data: imgs } = await supabase
+            .from('gallery_images')
+            .select('url')
+            .eq('gallery_id', gallery.id)
+            .order('display_order', { ascending: true })
+            .limit(1);
+          return { houseId: gallery.house_id!, url: imgs?.[0]?.url ?? null };
+        })
+      );
+
+      const map: Record<string, string> = {};
+      results.forEach(({ houseId, url }) => { if (url) map[houseId] = url; });
+      setCoverImages(map);
+    };
+
+    fetchCovers();
+  }, []);
 
   return (
     <section id="accommodation" className="py-20 bg-muted">
@@ -37,7 +70,7 @@ export function Accommodation() {
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <HouseCard
-                house={house}
+                house={{ ...house, coverImage: coverImages[house.id] ?? house.coverImage }}
                 onViewDetails={setSelectedHouse}
               />
             </div>
