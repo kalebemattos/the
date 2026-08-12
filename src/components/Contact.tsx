@@ -6,21 +6,37 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { MessageCircle, Mail, MapPin, Phone } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export function Contact() {
   const { t } = useLanguage();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     message: '',
   });
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const message = `${t('Nome', 'Name', 'Nombre', 'Nom')}: ${formData.name}\n${t('Email', 'Email', 'Correo', 'Email')}: ${formData.email}\n${t('Mensagem', 'Message', 'Mensaje', 'Message')}: ${formData.message}`;
-    const whatsappUrl = `https://wa.me/5524999999999?text=${encodeURIComponent(message)}`;
-    
+    setSubmitting(true);
+
+    // Save to Supabase contacts table
+    try {
+      await supabase.from('contacts').insert({
+        name: formData.name,
+        email: formData.email || null,
+        phone: formData.phone || null,
+        message: formData.message || null,
+        status: 'new',
+      });
+    } catch {
+      // silently ignore — still open WhatsApp
+    }
+
+    const msg = `${t('Nome', 'Name', 'Nombre', 'Nom')}: ${formData.name}\n${t('Email', 'Email', 'Correo', 'Email')}: ${formData.email}\n${formData.phone ? 'Tel: ' + formData.phone + '\n' : ''}${t('Mensagem', 'Message', 'Mensaje', 'Message')}: ${formData.message}`;
+    const whatsappUrl = `https://wa.me/5524999999999?text=${encodeURIComponent(msg)}`;
     window.open(whatsappUrl, '_blank');
     toast.success(
       t(
@@ -30,8 +46,9 @@ export function Contact() {
         'Redirection vers WhatsApp...'
       )
     );
-    
-    setFormData({ name: '', email: '', message: '' });
+
+    setFormData({ name: '', email: '', phone: '', message: '' });
+    setSubmitting(false);
   };
 
   const openWhatsApp = () => {
@@ -140,6 +157,18 @@ export function Contact() {
 
               <div>
                 <label className="block text-sm font-medium mb-2">
+                  {t('Telefone / WhatsApp', 'Phone / WhatsApp', 'Teléfono / WhatsApp', 'Téléphone / WhatsApp')}
+                </label>
+                <Input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="+55 00 00000-0000"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
                   {t('Mensagem', 'Message', 'Mensaje', 'Message')}
                 </label>
                 <Textarea
@@ -159,6 +188,7 @@ export function Contact() {
               <Button
                 type="submit"
                 size="lg"
+                disabled={submitting}
                 className="w-full bg-primary hover:bg-primary-glow text-white py-6 text-lg"
               >
                 {t('Enviar Mensagem', 'Send Message', 'Enviar Mensaje', 'Envoyer le Message')} →

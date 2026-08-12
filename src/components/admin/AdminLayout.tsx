@@ -9,7 +9,10 @@ import {
   LogOut,
   Menu,
   X,
-  UserCheck
+  UserCheck,
+  CalendarDays,
+  MessageSquare,
+  Settings2,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -52,7 +55,10 @@ export function AdminLayout() {
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'PDV', href: '/admin/pdv', icon: ShoppingCart },
     { name: 'Clientes', href: '/admin/clients', icon: UserCheck },
+    { name: 'Reservas', href: '/admin/bookings', icon: CalendarDays },
+    { name: 'Leads', href: '/admin/contacts', icon: MessageSquare },
     { name: 'Galerias', href: '/admin/galleries', icon: Image },
+    { name: 'Configurações', href: '/admin/settings', icon: Settings2 },
     ...(role === 'admin'
       ? [{ name: 'Usuários', href: '/admin/users', icon: Users }]
       : []),

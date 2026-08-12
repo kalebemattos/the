@@ -28,6 +28,12 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+const HOUSES = ['casa-101', 'casa-102', 'casa-201', 'casa-202'];
+const HOUSE_LABELS: Record<string, string> = {
+  'casa-101': 'Casa 101', 'casa-102': 'Casa 102',
+  'casa-201': 'Casa 201', 'casa-202': 'Casa 202',
+};
+
 interface Sale {
   id: string;
   client_name: string;
@@ -39,6 +45,12 @@ interface Sale {
   sale_date: string;
   notes: string | null;
   created_at: string;
+  house_id: string | null;
+  payment_method: string | null;
+  check_in: string | null;
+  check_out: string | null;
+  num_guests: number | null;
+  currency: string | null;
 }
 
 type SaleStatus = 'pending' | 'paid' | 'cancelled';
@@ -77,6 +89,12 @@ export default function AdminPDV() {
     status: 'pending' as 'pending' | 'paid' | 'cancelled',
     sale_date: format(new Date(), 'yyyy-MM-dd'),
     notes: '',
+    house_id: '',
+    payment_method: 'pix',
+    check_in: '',
+    check_out: '',
+    num_guests: '1',
+    currency: 'EUR',
   });
 
   // Stats
@@ -166,6 +184,15 @@ export default function AdminPDV() {
         notes: formData.notes || null,
       });
 
+      const extraFields = {
+        house_id: formData.house_id || null,
+        payment_method: formData.payment_method || 'pix',
+        check_in: formData.check_in || null,
+        check_out: formData.check_out || null,
+        num_guests: formData.num_guests ? parseInt(formData.num_guests) : 1,
+        currency: formData.currency || 'EUR',
+      };
+
       if (editingSale) {
         const { error } = await supabase
           .from('sales')
@@ -178,6 +205,7 @@ export default function AdminPDV() {
             status: validatedData.status,
             sale_date: validatedData.sale_date,
             notes: validatedData.notes,
+            ...extraFields,
           })
           .eq('id', editingSale.id);
 
@@ -196,6 +224,7 @@ export default function AdminPDV() {
             sale_date: validatedData.sale_date,
             notes: validatedData.notes,
             created_by: user?.id,
+            ...extraFields,
           }]);
 
         if (error) throw error;
@@ -243,6 +272,12 @@ export default function AdminPDV() {
       status: 'pending',
       sale_date: format(new Date(), 'yyyy-MM-dd'),
       notes: '',
+      house_id: '',
+      payment_method: 'pix',
+      check_in: '',
+      check_out: '',
+      num_guests: '1',
+      currency: 'EUR',
     });
     setEditingSale(null);
   };
@@ -258,6 +293,12 @@ export default function AdminPDV() {
       status: sale.status,
       sale_date: sale.sale_date,
       notes: sale.notes || '',
+      house_id: sale.house_id || '',
+      payment_method: sale.payment_method || 'pix',
+      check_in: sale.check_in || '',
+      check_out: sale.check_out || '',
+      num_guests: sale.num_guests?.toString() || '1',
+      currency: sale.currency || 'EUR',
     });
     setDialogOpen(true);
   };
@@ -359,6 +400,43 @@ export default function AdminPDV() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Casa Reservada</Label>
+                  <Select value={formData.house_id || '_none'} onValueChange={v => setFormData({ ...formData, house_id: v === '_none' ? '' : v })}>
+                    <SelectTrigger><SelectValue placeholder="Selecionar casa" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Nenhuma</SelectItem>
+                      {HOUSES.map(h => <SelectItem key={h} value={h}>{HOUSE_LABELS[h]}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Pagamento</Label>
+                  <Select value={formData.payment_method} onValueChange={v => setFormData({ ...formData, payment_method: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pix">Pix</SelectItem>
+                      <SelectItem value="card">Cartão</SelectItem>
+                      <SelectItem value="transfer">Transferência</SelectItem>
+                      <SelectItem value="wire">Wire / Int'l</SelectItem>
+                      <SelectItem value="cash">Dinheiro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Check-in</Label>
+                  <Input type="date" value={formData.check_in} onChange={e => setFormData({ ...formData, check_in: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Check-out</Label>
+                  <Input type="date" value={formData.check_out} onChange={e => setFormData({ ...formData, check_out: e.target.value })} />
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="product_service">Produto/Serviço *</Label>
                 <Input
@@ -371,7 +449,7 @@ export default function AdminPDV() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Valor (R$) *</Label>
+                  <Label htmlFor="amount">Valor *</Label>
                   <Input
                     id="amount"
                     type="number"
@@ -582,7 +660,8 @@ export default function AdminPDV() {
                   <TableRow>
                     <TableHead>Data</TableHead>
                     <TableHead>Cliente</TableHead>
-                    <TableHead>Produto/Serviço</TableHead>
+                    <TableHead>Casa / Produto</TableHead>
+                    <TableHead>Check-in</TableHead>
                     <TableHead>Valor</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
@@ -602,7 +681,16 @@ export default function AdminPDV() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>{sale.product_service}</TableCell>
+                      <TableCell>
+                        {sale.house_id ? (
+                          <span className="font-medium">{HOUSE_LABELS[sale.house_id] ?? sale.house_id}</span>
+                        ) : null}
+                        <p className="text-xs text-muted-foreground">{sale.product_service}</p>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {sale.check_in ? format(new Date(sale.check_in + 'T00:00:00'), 'dd/MM/yy') : '-'}
+                        {sale.check_out ? <><br /><span className="text-muted-foreground">até {format(new Date(sale.check_out + 'T00:00:00'), 'dd/MM/yy')}</span></> : null}
+                      </TableCell>
                       <TableCell>{formatCurrency(sale.amount)}</TableCell>
                       <TableCell>{getStatusBadge(sale.status)}</TableCell>
                       <TableCell className="text-right">

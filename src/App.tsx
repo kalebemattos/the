@@ -16,6 +16,9 @@ import AdminPDV from "./pages/admin/PDV";
 import AdminGalleries from "./pages/admin/Galleries";
 import AdminUsers from "./pages/admin/Users";
 import AdminClients from "./pages/admin/Clients";
+import AdminBookings from "./pages/admin/Bookings";
+import AdminContacts from "./pages/admin/Contacts";
+import AdminSettings from "./pages/admin/Settings";
 
 import ForgotPassword from "./pages/admin/ForgotPassword";
 import ResetPassword from "./pages/admin/ResetPassword";
@@ -49,6 +52,9 @@ const App = () => (
               <Route path="pdv" element={<AdminPDV />} />
               <Route path="clients" element={<AdminClients />} />
               <Route path="galleries" element={<AdminGalleries />} />
+              <Route path="bookings" element={<AdminBookings />} />
+              <Route path="contacts" element={<AdminContacts />} />
+              <Route path="settings" element={<AdminSettings />} />
               <Route path="users" element={<AdminUsers />} />
             </Route>
 

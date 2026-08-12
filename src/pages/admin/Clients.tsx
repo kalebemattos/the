@@ -39,6 +39,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Plus, Pencil, Trash2, Search, Users, Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Client {
   id: string;
@@ -48,6 +49,10 @@ interface Client {
   cpf: string | null;
   address: string | null;
   notes: string | null;
+  nationality: string | null;
+  country: string | null;
+  lead_status: string | null;
+  passport: string | null;
   created_at: string;
 }
 
@@ -58,7 +63,15 @@ interface ClientFormData {
   cpf: string;
   address: string;
   notes: string;
+  nationality: string;
+  country: string;
+  lead_status: string;
+  passport: string;
 }
+
+const LEAD_STATUS_LABELS: Record<string, string> = {
+  lead: 'Lead', confirmed: 'Confirmado', vip: 'VIP', inactive: 'Inativo',
+};
 
 const initialFormData: ClientFormData = {
   full_name: '',
@@ -67,6 +80,10 @@ const initialFormData: ClientFormData = {
   cpf: '',
   address: '',
   notes: '',
+  nationality: '',
+  country: '',
+  lead_status: 'lead',
+  passport: '',
 };
 
 export default function AdminClients() {
@@ -118,6 +135,10 @@ export default function AdminClients() {
       cpf: client.cpf || '',
       address: client.address || '',
       notes: client.notes || '',
+      nationality: client.nationality || '',
+      country: client.country || '',
+      lead_status: client.lead_status || 'lead',
+      passport: client.passport || '',
     });
     setIsDialogOpen(true);
   };
@@ -146,6 +167,10 @@ export default function AdminClients() {
       cpf: formData.cpf.trim() || null,
       address: formData.address.trim() || null,
       notes: formData.notes.trim() || null,
+      nationality: formData.nationality.trim() || null,
+      country: formData.country.trim() || null,
+      lead_status: formData.lead_status || 'lead',
+      passport: formData.passport.trim() || null,
     };
 
     if (selectedClient) {
@@ -286,7 +311,8 @@ export default function AdminClients() {
                     <TableHead>Nome</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Telefone</TableHead>
-                    <TableHead>CPF</TableHead>
+                    <TableHead>País</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -298,7 +324,12 @@ export default function AdminClients() {
                       </TableCell>
                       <TableCell>{client.email || '-'}</TableCell>
                       <TableCell>{client.phone || '-'}</TableCell>
-                      <TableCell>{client.cpf || '-'}</TableCell>
+                      <TableCell>{client.country || client.nationality || '-'}</TableCell>
+                      <TableCell>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                          {LEAD_STATUS_LABELS[client.lead_status ?? 'lead'] ?? client.lead_status ?? 'Lead'}
+                        </span>
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button
@@ -386,6 +417,49 @@ export default function AdminClients() {
                 }
                 placeholder="000.000.000-00"
               />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="nationality">Nacionalidade</Label>
+                <Input
+                  id="nationality"
+                  value={formData.nationality}
+                  onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
+                  placeholder="Ex: Brasileiro"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="country">País</Label>
+                <Input
+                  id="country"
+                  value={formData.country}
+                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                  placeholder="Ex: Brasil"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="passport">Passaporte</Label>
+                <Input
+                  id="passport"
+                  value={formData.passport}
+                  onChange={(e) => setFormData({ ...formData, passport: e.target.value })}
+                  placeholder="Número do passaporte"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Status</Label>
+                <Select value={formData.lead_status} onValueChange={v => setFormData({ ...formData, lead_status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="lead">Lead</SelectItem>
+                    <SelectItem value="confirmed">Confirmado</SelectItem>
+                    <SelectItem value="vip">VIP</SelectItem>
+                    <SelectItem value="inactive">Inativo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="address">Endereço</Label>
