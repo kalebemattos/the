@@ -82,45 +82,54 @@ export function Packages() {
   ];
 
   const extras = [
-    { 
-      id: 'diving',
-      namePt: 'Mergulho Subaquático',
-      nameEn: 'Scuba Diving',
-      nameEs: 'Buceo Submarino',
-      nameFr: 'Plongée Sous-Marine',
-      price: 150
-    },
-    { 
-      id: 'rio',
-      namePt: 'Cristo Redentor & Pão de Açúcar',
-      nameEn: 'Christ the Redeemer & Sugarloaf',
-      nameEs: 'Cristo Redentor y Pan de Azúcar',
-      nameFr: 'Christ Rédempteur & Pain de Sucre',
-      price: 200
-    },
-    { 
-      id: 'aquarium',
-      namePt: 'AquaRio / BioParque',
-      nameEn: 'AquaRio / BioParque',
-      nameEs: 'AquaRio / BioParque',
-      nameFr: 'AquaRio / BioParque',
-      price: 100
-    },
-    { 
+    {
       id: 'paragliding',
       namePt: 'Voo de Parapente',
       nameEn: 'Paragliding Flight',
       nameEs: 'Vuelo de Parapente',
       nameFr: 'Vol en Parapente',
-      price: 250
+      prices: { 1: 350, 2: 450, 3: 550, 6: 850 },
+    },
+    {
+      id: 'rio',
+      namePt: 'Cristo Redentor & Pão de Açúcar',
+      nameEn: 'Christ the Redeemer & Sugarloaf',
+      nameEs: 'Cristo Redentor y Pan de Azúcar',
+      nameFr: 'Christ Rédempteur & Pain de Sucre',
+      prices: { 1: 350, 2: 450, 3: 550, 6: 850 },
+    },
+    {
+      id: 'aquarium',
+      namePt: 'AquaRio / BioParque',
+      nameEn: 'AquaRio / BioParque',
+      nameEs: 'AquaRio / BioParque',
+      nameFr: 'AquaRio / BioParque',
+      prices: { 1: 350, 2: 450, 3: 550, 6: 850 },
+    },
+    {
+      id: 'diving',
+      namePt: 'Mergulho Subaquático',
+      nameEn: 'Scuba Diving',
+      nameEs: 'Buceo Submarino',
+      nameFr: 'Plongée Sous-Marine',
+      prices: { 1: 400, 2: 550, 3: 650, 6: 950 },
     },
   ];
 
-  const selectedPackage = packages.find(p => p.people === selectedPeople) || packages[0];
-  const extrasTotal = selectedExtras.reduce((sum, extraId) => {
+  const QTY_OPTIONS = [1, 2, 3, 6] as const;
+  type QtyOption = typeof QTY_OPTIONS[number];
+
+  const [extraQty, setExtraQty] = useState<Record<string, QtyOption>>({});
+
+  const getExtraPrice = (extraId: string) => {
     const extra = extras.find(e => e.id === extraId);
-    return sum + (extra?.price || 0);
-  }, 0);
+    if (!extra) return 0;
+    const qty = extraQty[extraId] ?? 1;
+    return extra.prices[qty as QtyOption] ?? extra.prices[1];
+  };
+
+  const selectedPackage = packages.find(p => p.people === selectedPeople) || packages[0];
+  const extrasTotal = selectedExtras.reduce((sum, extraId) => sum + getExtraPrice(extraId), 0);
   const totalPrice = selectedPackage.price + extrasTotal;
 
   const toggleExtra = (extraId: string) => {
@@ -129,6 +138,13 @@ export function Packages() {
         ? prev.filter(id => id !== extraId)
         : [...prev, extraId]
     );
+  };
+
+  const setQty = (extraId: string, qty: QtyOption, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExtraQty(prev => ({ ...prev, [extraId]: qty }));
+    // auto-select the extra when qty is chosen
+    setSelectedExtras(prev => prev.includes(extraId) ? prev : [...prev, extraId]);
   };
 
   const selectedHouseData = houses.find(h => h.id === selectedHouse);
@@ -306,28 +322,52 @@ export function Packages() {
             </h3>
             
             <div className="space-y-4">
-              {extras.map((extra) => (
-                <div
-                  key={extra.id}
-                  className="flex items-center justify-between p-4 rounded-lg border border-border hover:border-accent/50 transition-all cursor-pointer"
-                  onClick={() => toggleExtra(extra.id)}
-                >
-                  <div className="flex items-center gap-3">
-                    <Checkbox
-                      id={extra.id}
-                      checked={selectedExtras.includes(extra.id)}
-                      onCheckedChange={() => toggleExtra(extra.id)}
-                    />
-                    <Label htmlFor={extra.id} className="cursor-pointer font-medium">
-                      {t(extra.namePt, extra.nameEn, extra.nameEs, extra.nameFr)}
-                    </Label>
+              {extras.map((extra) => {
+                const isSelected = selectedExtras.includes(extra.id);
+                const currentQty = (extraQty[extra.id] ?? 1) as QtyOption;
+                return (
+                  <div
+                    key={extra.id}
+                    className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                      isSelected ? 'border-accent bg-accent/5' : 'border-border hover:border-accent/50'
+                    }`}
+                    onClick={() => toggleExtra(extra.id)}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <Checkbox
+                          id={extra.id}
+                          checked={isSelected}
+                          onCheckedChange={() => toggleExtra(extra.id)}
+                        />
+                        <Label htmlFor={extra.id} className="cursor-pointer font-medium text-base">
+                          {t(extra.namePt, extra.nameEn, extra.nameEs, extra.nameFr)}
+                        </Label>
+                      </div>
+                      <div className="flex items-center gap-1 text-lg font-bold text-accent">
+                        <Euro className="w-4 h-4" />
+                        {getExtraPrice(extra.id)}
+                      </div>
+                    </div>
+                    {/* Qty buttons */}
+                    <div className="flex gap-2 pl-7" onClick={e => e.stopPropagation()}>
+                      {QTY_OPTIONS.map(qty => (
+                        <button
+                          key={qty}
+                          onClick={e => setQty(extra.id, qty, e)}
+                          className={`px-3 py-1 rounded-md text-sm font-semibold border transition-all ${
+                            currentQty === qty
+                              ? 'bg-accent text-white border-accent'
+                              : 'border-border text-muted-foreground hover:border-accent/60'
+                          }`}
+                        >
+                          {qty}x · €{extra.prices[qty]}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-lg font-semibold text-accent">
-                    <Euro className="w-5 h-5" />
-                    {extra.price}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </Card>
 
