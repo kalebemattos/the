@@ -77,8 +77,7 @@ export function Hero() {
             <Button
               onClick={() => scrollToSection('packages')}
               size="lg"
-              variant="outline"
-              className="border-2 border-white text-white hover:bg-white hover:text-primary px-8 py-6 text-lg transition-all hover:scale-105"
+              className="bg-primary hover:bg-primary/80 active:scale-95 text-white border-2 border-primary px-8 py-6 text-lg transition-all hover:scale-105 shadow-lg"
             >
               {t('Reservar Agora', 'Book Now', 'Reservar Ahora', 'Réserver Maintenant')}
             </Button>
