@@ -202,7 +202,7 @@ export function Contact() {
       <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
         {/* Instagram */}
         <button
-          onClick={() => window.open('https://www.instagram.com/thebestofangra', '_blank')}
+          onClick={() => window.open('https://www.instagram.com/the.best.of.angra/', '_blank')}
           className="bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] hover:opacity-90 text-white p-3 rounded-full shadow-2xl hover:scale-110 transition-all animate-bounce"
           style={{ animationDelay: '0.15s' }}
           aria-label="Instagram"
