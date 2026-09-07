@@ -9,7 +9,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="bg-[#0a1628] text-white">
+    <footer className="bg-ocean-deep text-white">
       {/* Main content */}
       <div className="container mx-auto px-4 pt-16 pb-10">
         <div className="grid md:grid-cols-12 gap-10 mb-12">
