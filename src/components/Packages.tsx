@@ -508,20 +508,38 @@ export function Packages() {
                           </p>
                         </div>
                       </div>
-                      {/* Qty */}
-                      <div className="flex flex-wrap gap-2 pl-7" onClick={e => e.stopPropagation()}>
-                        {QTY_OPTIONS.map(qty => (
-                          <button
-                            key={qty}
-                            onClick={e => setQty(extra.id, qty, e)}
-                            className={cn(
-                              'px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all',
-                              currentQty === qty ? 'bg-accent text-white border-accent' : 'border-border text-muted-foreground hover:border-accent/50'
-                            )}
-                          >
-                            {qty}x · €{extra.prices[qty]}
-                          </button>
-                        ))}
+                      {/* Qty — person selector */}
+                      <div className="grid grid-cols-4 gap-2 pl-7 mt-1" onClick={e => e.stopPropagation()}>
+                        {QTY_OPTIONS.map(qty => {
+                          const selected = currentQty === qty;
+                          return (
+                            <button
+                              key={qty}
+                              onClick={e => setQty(extra.id, qty, e)}
+                              className={cn(
+                                'flex flex-col items-center gap-1 py-2 px-1 rounded-xl border-2 transition-all',
+                                selected
+                                  ? 'bg-accent border-accent text-white shadow-sm scale-105'
+                                  : 'border-border text-muted-foreground hover:border-accent/50 hover:bg-accent/5'
+                              )}
+                            >
+                              <div className="flex items-center gap-0.5">
+                                {Array.from({ length: Math.min(qty, 3) }).map((_, i) => (
+                                  <Users key={i} className={cn('w-3 h-3', selected ? 'text-white' : 'text-muted-foreground')} />
+                                ))}
+                                {qty === 6 && <span className={cn('text-xs font-bold leading-none', selected ? 'text-white' : 'text-muted-foreground')}>×6</span>}
+                              </div>
+                              <span className={cn('text-xs font-semibold leading-none', selected ? 'text-white' : 'text-foreground')}>
+                                €{extra.prices[qty]}
+                              </span>
+                              <span className={cn('text-[10px] leading-none', selected ? 'text-white/80' : 'text-muted-foreground')}>
+                                {qty === 1
+                                  ? t('1 pessoa', '1 person', '1 persona', '1 personne')
+                                  : t(`${qty} pessoas`, `${qty} people`, `${qty} personas`, `${qty} personnes`)}
+                              </span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   );
@@ -574,16 +592,25 @@ export function Packages() {
                       <span className="font-semibold text-white">{format(checkInDate, 'dd/MM/yyyy')}</span>
                     </div>
                   )}
-                  {selectedExtras.map(id => {
-                    const ex = extras.find(e => e.id === id);
-                    if (!ex) return null;
-                    return (
-                      <div key={id} className="flex justify-between text-white/80">
-                        <span>{t(ex.namePt, ex.nameEn, ex.nameEs, ex.nameFr)} ({extraQty[id] ?? 1}x)</span>
-                        <span className="font-semibold text-white">€{getExtraPrice(id)}</span>
-                      </div>
-                    );
-                  })}
+                  {selectedExtras.length > 0 && (
+                    <div className="border-t border-white/20 pt-2 mt-1">
+                      <p className="text-white/60 text-xs mb-1">{t('Extras selecionados:', 'Selected extras:', 'Extras seleccionados:', 'Extras sélectionnés:')}</p>
+                      {selectedExtras.map(id => {
+                        const ex = extras.find(e => e.id === id);
+                        if (!ex) return null;
+                        const qty = extraQty[id] ?? 1;
+                        const pessoaLabel = qty === 1
+                          ? t('1 pessoa', '1 person', '1 persona', '1 personne')
+                          : t(`${qty} pessoas`, `${qty} people`, `${qty} personas`, `${qty} personnes`);
+                        return (
+                          <div key={id} className="flex justify-between text-white/80">
+                            <span>{t(ex.namePt, ex.nameEn, ex.nameEs, ex.nameFr)} <span className="text-white/50 text-xs">({pessoaLabel})</span></span>
+                            <span className="font-semibold text-white">€{getExtraPrice(id)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                   <div className="border-t border-white/30 pt-3 mt-2 flex justify-between">
                     <span className="font-bold text-lg">{t('Total', 'Total', 'Total', 'Total')}</span>
                     <span className="font-bold text-3xl">€{totalPrice}</span>
