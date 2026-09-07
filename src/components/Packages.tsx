@@ -508,8 +508,8 @@ export function Packages() {
                           </p>
                         </div>
                       </div>
-                      {/* Qty — person selector */}
-                      <div className="grid grid-cols-4 gap-2 pl-7 mt-1" onClick={e => e.stopPropagation()}>
+                      {/* Qty — segmented control */}
+                      <div className="flex items-center gap-1 pl-7 mt-2 bg-muted rounded-lg p-1 w-fit" onClick={e => e.stopPropagation()}>
                         {QTY_OPTIONS.map(qty => {
                           const selected = currentQty === qty;
                           return (
@@ -517,25 +517,17 @@ export function Packages() {
                               key={qty}
                               onClick={e => setQty(extra.id, qty, e)}
                               className={cn(
-                                'flex flex-col items-center gap-1 py-2 px-1 rounded-xl border-2 transition-all',
+                                'px-3 py-1.5 rounded-md text-sm font-medium transition-all',
                                 selected
-                                  ? 'bg-accent border-accent text-white shadow-sm scale-105'
-                                  : 'border-border text-muted-foreground hover:border-accent/50 hover:bg-accent/5'
+                                  ? 'bg-accent text-white shadow-sm'
+                                  : 'text-muted-foreground hover:text-foreground'
                               )}
                             >
-                              <div className="flex items-center gap-0.5">
-                                {Array.from({ length: Math.min(qty, 3) }).map((_, i) => (
-                                  <Users key={i} className={cn('w-3 h-3', selected ? 'text-white' : 'text-muted-foreground')} />
-                                ))}
-                                {qty === 6 && <span className={cn('text-xs font-bold leading-none', selected ? 'text-white' : 'text-muted-foreground')}>×6</span>}
-                              </div>
-                              <span className={cn('text-xs font-semibold leading-none', selected ? 'text-white' : 'text-foreground')}>
+                              {qty === 1
+                                ? t('1 pessoa', '1 person', '1 persona', '1 personne')
+                                : `${qty} ${t('pessoas', 'people', 'personas', 'personnes')}`}
+                              <span className={cn('ml-1.5 text-xs', selected ? 'text-white/80' : 'text-muted-foreground')}>
                                 €{extra.prices[qty]}
-                              </span>
-                              <span className={cn('text-[10px] leading-none', selected ? 'text-white/80' : 'text-muted-foreground')}>
-                                {qty === 1
-                                  ? t('1 pessoa', '1 person', '1 persona', '1 personne')
-                                  : t(`${qty} pessoas`, `${qty} people`, `${qty} personas`, `${qty} personnes`)}
                               </span>
                             </button>
                           );
