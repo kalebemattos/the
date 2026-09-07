@@ -200,13 +200,11 @@ export function HouseDetailModal({ house, open, onClose }: HouseDetailModalProps
             <Button
               className="flex-1 bg-primary hover:bg-primary/90"
               onClick={() => {
-                const contactSection = document.getElementById('contact');
-                if (contactSection) {
-                  onClose();
-                  setTimeout(() => {
-                    contactSection.scrollIntoView({ behavior: 'smooth' });
-                  }, 300);
-                }
+                if (house) sessionStorage.setItem('preselected_house', house.id);
+                onClose();
+                setTimeout(() => {
+                  document.getElementById('packages')?.scrollIntoView({ behavior: 'smooth' });
+                }, 300);
               }}
             >
               {t('Reservar Agora', 'Book Now', 'Reservar Ahora', 'Réserver Maintenant')}

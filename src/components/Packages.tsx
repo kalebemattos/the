@@ -137,7 +137,11 @@ export function Packages() {
   const [step, setStep] = useState(1);
   const [checkInDate, setCheckInDate] = useState<Date>();
   const [selectedPeople, setSelectedPeople] = useState<number>(2);
-  const [selectedHouse, setSelectedHouse] = useState<string>('casa-101');
+  const [selectedHouse, setSelectedHouse] = useState<string>(() => {
+    const pre = sessionStorage.getItem('preselected_house');
+    if (pre) { sessionStorage.removeItem('preselected_house'); return pre; }
+    return 'casa-101';
+  });
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
   const [extraQty, setExtraQty] = useState<Record<string, number>>({});
 
