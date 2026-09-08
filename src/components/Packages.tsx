@@ -563,7 +563,32 @@ export function Packages() {
                       </div>
                     );
                   })}
+                  {selectedExtras.map(id => {
+                    const ex = extras.find(e => e.id === id);
+                    if (!ex) return null;
+                    const Icon = ex.icon;
+                    const qty = extraQty[id] ?? 1;
+                    const pessoaLabel = qty === 1
+                      ? t('1 pessoa', '1 person', '1 persona', '1 personne')
+                      : t(`${qty} pessoas`, `${qty} people`, `${qty} personas`, `${qty} personnes`);
+                    return (
+                      <div key={id} className="flex items-start gap-3 p-3 bg-accent/5 rounded-xl border border-accent/20">
+                        <div className="p-2 bg-accent/10 rounded-lg shrink-0">
+                          <Icon className="w-4 h-4 text-accent" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium leading-snug">{t(ex.namePt, ex.nameEn, ex.nameEs, ex.nameFr)}</p>
+                          <p className="text-xs text-muted-foreground">{pessoaLabel} · €{getExtraPrice(id)}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
+                {selectedExtras.length === 0 && (
+                  <p className="text-xs text-muted-foreground mt-3 text-center">
+                    {t('Nenhum extra selecionado.', 'No extras selected.', 'Sin extras seleccionados.', 'Aucun extra sélectionné.')}
+                  </p>
+                )}
               </Card>
 
               {/* Summary */}
