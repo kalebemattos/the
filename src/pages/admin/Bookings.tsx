@@ -78,7 +78,7 @@ export default function Bookings() {
     e.preventDefault();
     const payload = { ...form, num_guests: Number(form.num_guests), total_amount: Number(form.total_amount) };
     if (editing) {
-      const { error } = await supabase.from('bookings').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editing.id);
+      const { error } = await supabase.from('bookings').update(payload).eq('id', editing.id);
       if (error) { toast.error('Erro ao atualizar'); return; }
       toast.success('Reserva atualizada');
     } else {

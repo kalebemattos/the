@@ -324,10 +324,11 @@ export default function AdminPDV() {
     link.click();
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
+  const formatCurrency = (value: number, currency: string = 'EUR') => {
+    const locale = currency === 'BRL' ? 'pt-BR' : 'de-DE';
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: 'BRL',
+      currency: currency || 'EUR',
     }).format(value);
   };
 
@@ -691,7 +692,7 @@ export default function AdminPDV() {
                         {sale.check_in ? format(new Date(sale.check_in + 'T00:00:00'), 'dd/MM/yy') : '-'}
                         {sale.check_out ? <><br /><span className="text-muted-foreground">até {format(new Date(sale.check_out + 'T00:00:00'), 'dd/MM/yy')}</span></> : null}
                       </TableCell>
-                      <TableCell>{formatCurrency(sale.amount)}</TableCell>
+                      <TableCell>{formatCurrency(sale.amount, sale.currency ?? 'EUR')}</TableCell>
                       <TableCell>{getStatusBadge(sale.status)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">

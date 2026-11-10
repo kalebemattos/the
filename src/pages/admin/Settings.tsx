@@ -10,9 +10,21 @@ import { Settings2, Save, Loader2 } from 'lucide-react';
 interface ConfigItem {
   key: string;
   value: string;
-  label: string;
-  updated_at: string;
+  label: string | null;
+  updated_at: string | null;
 }
+
+const KEY_LABELS: Record<string, string> = {
+  whatsapp_number: 'WhatsApp (com DDI)',
+  contact_email: 'E-mail de contato',
+  instagram_url: 'URL do Instagram',
+  price_1p: 'Preço — 1 pessoa (€)',
+  price_2p: 'Preço — 2 pessoas (€)',
+  price_4p: 'Preço — 4 pessoas (€)',
+  price_5p: 'Preço — 5 pessoas (€)',
+  price_6p: 'Preço — 6 pessoas (€)',
+  trip_duration_days: 'Duração do roteiro (dias)',
+};
 
 const CONFIG_GROUPS = [
   {
@@ -20,8 +32,9 @@ const CONFIG_GROUPS = [
     keys: ['whatsapp_number', 'contact_email', 'instagram_url'],
   },
   {
-    title: 'Preços por Casa (€)',
-    keys: ['price_casa_101', 'price_casa_102', 'price_casa_201', 'price_casa_202'],
+    title: 'Preços por Número de Pessoas (€)',
+    description: 'Valor base do pacote por capacidade de hóspedes. Usado no wizard de reserva do site.',
+    keys: ['price_1p', 'price_2p', 'price_4p', 'price_5p', 'price_6p'],
   },
   {
     title: 'Roteiro',
@@ -61,7 +74,7 @@ export default function Settings() {
     const updates = Object.entries(values).map(([key, value]) => ({
       key,
       value,
-      label: config[key]?.label ?? key,
+      label: config[key]?.label ?? KEY_LABELS[key] ?? key,
       updated_at: now,
     }));
 
@@ -101,7 +114,6 @@ export default function Settings() {
 
       <div className="space-y-6">
         {CONFIG_GROUPS.map(group => {
-          const groupKeys = group.keys.filter(k => config[k] !== undefined || values[k] !== undefined);
           return (
             <Card key={group.title}>
               <CardHeader>
@@ -109,11 +121,14 @@ export default function Settings() {
                   <Settings2 className="h-5 w-5" />
                   {group.title}
                 </CardTitle>
+                {'description' in group && group.description && (
+                  <CardDescription>{group.description}</CardDescription>
+                )}
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {group.keys.map(key => {
-                    const label = config[key]?.label ?? key;
+                    const label = config[key]?.label ?? KEY_LABELS[key] ?? key;
                     const val = values[key] ?? '';
                     return (
                       <div key={key} className="space-y-1">
@@ -125,7 +140,7 @@ export default function Settings() {
                         />
                         {config[key]?.updated_at && (
                           <p className="text-xs text-muted-foreground">
-                            Atualizado em {new Date(config[key].updated_at).toLocaleDateString('pt-BR')}
+                            Atualizado em {new Date(config[key].updated_at!).toLocaleDateString('pt-BR')}
                           </p>
                         )}
                       </div>

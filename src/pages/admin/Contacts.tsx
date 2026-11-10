@@ -55,13 +55,13 @@ export default function Contacts() {
   useEffect(() => { fetchContacts(); }, []);
 
   const handleStatusUpdate = async (id: string, status: string) => {
-    await supabase.from('contacts').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
+    await supabase.from('contacts').update({ status }).eq('id', id);
     fetchContacts();
   };
 
   const handleNotesUpdate = async () => {
     if (!selected) return;
-    await supabase.from('contacts').update({ notes: selected.notes, updated_at: new Date().toISOString() }).eq('id', selected.id);
+    await supabase.from('contacts').update({ notes: selected.notes }).eq('id', selected.id);
     toast.success('Nota salva');
     setDialogOpen(false);
     fetchContacts();
