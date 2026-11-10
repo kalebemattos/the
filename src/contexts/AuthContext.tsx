@@ -13,6 +13,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isAdmin: boolean;
   isAdminOrOperator: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: any }>;
   signUp: (email: string, password: string, name: string) => Promise<{ error?: any }>;
@@ -155,6 +156,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
   };
 
+  const isAdmin = user?.role === "admin";
   const isAdminOrOperator =
     user?.role === "admin" || user?.role === "operator";
 
@@ -163,6 +165,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         user,
         loading,
+        isAdmin,
         isAdminOrOperator,
         signIn,
         signUp,
