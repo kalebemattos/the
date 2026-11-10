@@ -133,70 +133,118 @@ export default function Contacts() {
           ) : filtered.length === 0 ? (
             <p className="text-center text-muted-foreground py-12">Nenhum lead encontrado.</p>
           ) : (
-            <div className="overflow-x-auto rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Contato</TableHead>
-                    <TableHead>Interesse</TableHead>
-                    <TableHead>Mensagem</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map(c => (
-                    <TableRow key={c.id}>
-                      <TableCell className="font-medium">{c.name}</TableCell>
-                      <TableCell>
-                        <div className="space-y-0.5">
-                          {c.email && <div className="flex items-center gap-1 text-sm"><Mail className="h-3 w-3" />{c.email}</div>}
-                          {c.phone && <div className="flex items-center gap-1 text-sm"><Phone className="h-3 w-3" />{c.phone}</div>}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {c.house_interest && <div className="text-sm">{c.house_interest}</div>}
-                        {c.num_guests && <div className="text-xs text-muted-foreground">{c.num_guests} hóspede(s)</div>}
-                        {c.travel_period && <div className="text-xs text-muted-foreground">{c.travel_period}</div>}
-                      </TableCell>
-                      <TableCell className="max-w-[200px]">
-                        <p className="text-sm truncate text-muted-foreground">{c.message || '-'}</p>
-                      </TableCell>
-                      <TableCell>
-                        <Select value={c.status} onValueChange={v => handleStatusUpdate(c.id, v)}>
-                          <SelectTrigger className="w-32 h-7 text-xs">
-                            <SelectValue>
-                              <Badge className={`${STATUS_COLORS[c.status] ?? ''} text-xs`}>{STATUS_LABELS[c.status] ?? c.status}</Badge>
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="new">Novo</SelectItem>
-                            <SelectItem value="contacted">Contactado</SelectItem>
-                            <SelectItem value="converted">Convertido</SelectItem>
-                            <SelectItem value="lost">Perdido</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {new Date(c.created_at).toLocaleDateString('pt-BR')}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setSelected(c); setDialogOpen(true); }}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(c.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+            <>
+              {/* Mobile: cards */}
+              <div className="md:hidden space-y-3">
+                {filtered.map(c => (
+                  <div key={c.id} className="border rounded-xl p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-semibold truncate">{c.name}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString('pt-BR')}</p>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setSelected(c); setDialogOpen(true); }}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(c.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                      {c.email && <a href={`mailto:${c.email}`} className="flex items-center gap-1 text-primary"><Mail className="h-3 w-3" />{c.email}</a>}
+                      {c.phone && <a href={`tel:${c.phone}`} className="flex items-center gap-1 text-primary"><Phone className="h-3 w-3" />{c.phone}</a>}
+                    </div>
+                    {(c.house_interest || c.num_guests || c.travel_period) && (
+                      <p className="text-xs text-muted-foreground">
+                        {[c.house_interest, c.num_guests ? `${c.num_guests} hósp.` : null, c.travel_period].filter(Boolean).join(' · ')}
+                      </p>
+                    )}
+                    {c.message && <p className="text-sm text-muted-foreground line-clamp-2">{c.message}</p>}
+                    <Select value={c.status} onValueChange={v => handleStatusUpdate(c.id, v)}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue>
+                          <Badge className={`${STATUS_COLORS[c.status] ?? ''} text-xs`}>{STATUS_LABELS[c.status] ?? c.status}</Badge>
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">Novo</SelectItem>
+                        <SelectItem value="contacted">Contactado</SelectItem>
+                        <SelectItem value="converted">Convertido</SelectItem>
+                        <SelectItem value="lost">Perdido</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop: table */}
+              <div className="hidden md:block overflow-x-auto rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Contato</TableHead>
+                      <TableHead>Interesse</TableHead>
+                      <TableHead>Mensagem</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map(c => (
+                      <TableRow key={c.id}>
+                        <TableCell className="font-medium">{c.name}</TableCell>
+                        <TableCell>
+                          <div className="space-y-0.5">
+                            {c.email && <div className="flex items-center gap-1 text-sm"><Mail className="h-3 w-3" />{c.email}</div>}
+                            {c.phone && <div className="flex items-center gap-1 text-sm"><Phone className="h-3 w-3" />{c.phone}</div>}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {c.house_interest && <div className="text-sm">{c.house_interest}</div>}
+                          {c.num_guests && <div className="text-xs text-muted-foreground">{c.num_guests} hóspede(s)</div>}
+                          {c.travel_period && <div className="text-xs text-muted-foreground">{c.travel_period}</div>}
+                        </TableCell>
+                        <TableCell className="max-w-[200px]">
+                          <p className="text-sm truncate text-muted-foreground">{c.message || '-'}</p>
+                        </TableCell>
+                        <TableCell>
+                          <Select value={c.status} onValueChange={v => handleStatusUpdate(c.id, v)}>
+                            <SelectTrigger className="w-32 h-7 text-xs">
+                              <SelectValue>
+                                <Badge className={`${STATUS_COLORS[c.status] ?? ''} text-xs`}>{STATUS_LABELS[c.status] ?? c.status}</Badge>
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="new">Novo</SelectItem>
+                              <SelectItem value="contacted">Contactado</SelectItem>
+                              <SelectItem value="converted">Convertido</SelectItem>
+                              <SelectItem value="lost">Perdido</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {new Date(c.created_at).toLocaleDateString('pt-BR')}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setSelected(c); setDialogOpen(true); }}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(c.id)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

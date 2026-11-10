@@ -304,55 +304,77 @@ export default function AdminClients() {
                 : 'Nenhum cliente cadastrado ainda.'}
             </div>
           ) : (
-            <div className="rounded-md border overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Telefone</TableHead>
-                    <TableHead>País</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredClients.map((client) => (
-                    <TableRow key={client.id}>
-                      <TableCell className="font-medium">
-                        {client.full_name}
-                      </TableCell>
-                      <TableCell>{client.email || '-'}</TableCell>
-                      <TableCell>{client.phone || '-'}</TableCell>
-                      <TableCell>{client.country || client.nationality || '-'}</TableCell>
-                      <TableCell>
+            <>
+              {/* Mobile: cards */}
+              <div className="md:hidden space-y-3">
+                {filteredClients.map((client) => (
+                  <div key={client.id} className="border rounded-xl p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-semibold truncate">{client.full_name}</p>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                          {LEAD_STATUS_LABELS[client.lead_status ?? 'lead'] ?? client.lead_status ?? 'Lead'}
+                          {LEAD_STATUS_LABELS[client.lead_status ?? 'lead'] ?? 'Lead'}
                         </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenEdit(client)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenDelete(client)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenEdit(client)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenDelete(client)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="mt-2 space-y-0.5 text-sm text-muted-foreground">
+                      {client.email && <p>{client.email}</p>}
+                      {client.phone && <p>{client.phone}</p>}
+                      {(client.country || client.nationality) && <p>{client.country || client.nationality}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop: table */}
+              <div className="hidden md:block rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Telefone</TableHead>
+                      <TableHead>País</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredClients.map((client) => (
+                      <TableRow key={client.id}>
+                        <TableCell className="font-medium">{client.full_name}</TableCell>
+                        <TableCell>{client.email || '-'}</TableCell>
+                        <TableCell>{client.phone || '-'}</TableCell>
+                        <TableCell>{client.country || client.nationality || '-'}</TableCell>
+                        <TableCell>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                            {LEAD_STATUS_LABELS[client.lead_status ?? 'lead'] ?? client.lead_status ?? 'Lead'}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(client)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleOpenDelete(client)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

@@ -655,68 +655,89 @@ export default function AdminPDV() {
               Nenhuma venda encontrada
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Casa / Produto</TableHead>
-                    <TableHead>Check-in</TableHead>
-                    <TableHead>Valor</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sales.map((sale) => (
-                    <TableRow key={sale.id}>
-                      <TableCell>
-                        {format(new Date(sale.sale_date), 'dd/MM/yyyy')}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{sale.client_name}</p>
-                          {sale.client_email && (
-                            <p className="text-sm text-muted-foreground">{sale.client_email}</p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {sale.house_id ? (
-                          <span className="font-medium">{HOUSE_LABELS[sale.house_id] ?? sale.house_id}</span>
-                        ) : null}
-                        <p className="text-xs text-muted-foreground">{sale.product_service}</p>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {sale.check_in ? format(new Date(sale.check_in + 'T00:00:00'), 'dd/MM/yy') : '-'}
-                        {sale.check_out ? <><br /><span className="text-muted-foreground">até {format(new Date(sale.check_out + 'T00:00:00'), 'dd/MM/yy')}</span></> : null}
-                      </TableCell>
-                      <TableCell>{formatCurrency(sale.amount, sale.currency ?? 'EUR')}</TableCell>
-                      <TableCell>{getStatusBadge(sale.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEditDialog(sale)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(sale.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+            <>
+              {/* Mobile: cards */}
+              <div className="md:hidden space-y-3">
+                {sales.map((sale) => (
+                  <div key={sale.id} className="border rounded-xl p-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-semibold truncate">{sale.client_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(sale.sale_date), 'dd/MM/yyyy')}
+                          {sale.house_id ? ` · ${HOUSE_LABELS[sale.house_id] ?? sale.house_id}` : ''}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {getStatusBadge(sale.status)}
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditDialog(sale)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(sale.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">{sale.product_service}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-primary">{formatCurrency(sale.amount, sale.currency ?? 'EUR')}</span>
+                      {sale.check_in && (
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(sale.check_in + 'T00:00:00'), 'dd/MM/yy')}
+                          {sale.check_out ? ` → ${format(new Date(sale.check_out + 'T00:00:00'), 'dd/MM/yy')}` : ''}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop: table */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Casa / Produto</TableHead>
+                      <TableHead>Check-in</TableHead>
+                      <TableHead>Valor</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {sales.map((sale) => (
+                      <TableRow key={sale.id}>
+                        <TableCell>{format(new Date(sale.sale_date), 'dd/MM/yyyy')}</TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{sale.client_name}</p>
+                            {sale.client_email && <p className="text-sm text-muted-foreground">{sale.client_email}</p>}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {sale.house_id ? <span className="font-medium">{HOUSE_LABELS[sale.house_id] ?? sale.house_id}</span> : null}
+                          <p className="text-xs text-muted-foreground">{sale.product_service}</p>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {sale.check_in ? format(new Date(sale.check_in + 'T00:00:00'), 'dd/MM/yy') : '-'}
+                          {sale.check_out ? <><br /><span className="text-muted-foreground">até {format(new Date(sale.check_out + 'T00:00:00'), 'dd/MM/yy')}</span></> : null}
+                        </TableCell>
+                        <TableCell>{formatCurrency(sale.amount, sale.currency ?? 'EUR')}</TableCell>
+                        <TableCell>{getStatusBadge(sale.status)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => openEditDialog(sale)}><Pencil className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDelete(sale.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

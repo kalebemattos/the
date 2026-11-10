@@ -219,21 +219,29 @@ export default function Bookings() {
             ) : (
               <div className="space-y-3">
                 {bookings.map(b => (
-                  <div key={b.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-3 h-3 rounded-full shrink-0 ${HOUSE_COLORS[b.house_id] ?? 'bg-gray-400'}`} />
-                      <div>
-                        <p className="font-medium">{b.client_name}</p>
+                  <div key={b.id} className="p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="flex items-start gap-3">
+                      <div className={`w-3 h-3 rounded-full shrink-0 mt-1.5 ${HOUSE_COLORS[b.house_id] ?? 'bg-gray-400'}`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <p className="font-medium truncate">{b.client_name}</p>
+                          <Badge className={`${STATUS_COLORS[b.status] ?? ''} shrink-0`}>{STATUS_LABELS[b.status] ?? b.status}</Badge>
+                        </div>
                         <p className="text-sm text-muted-foreground">
-                          {HOUSE_LABELS[b.house_id]} · {new Date(b.check_in).toLocaleDateString('pt-BR')} → {new Date(b.check_out).toLocaleDateString('pt-BR')} · {b.num_guests} hóspede(s)
+                          {HOUSE_LABELS[b.house_id]} · {b.num_guests} hóspede(s)
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(b.check_in + 'T00:00:00').toLocaleDateString('pt-BR')} → {new Date(b.check_out + 'T00:00:00').toLocaleDateString('pt-BR')}
                         </p>
                       </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className="font-semibold text-sm hidden sm:inline">€ {Number(b.total_amount).toLocaleString('pt-BR')}</span>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(b)}><Pencil className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(b.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="font-semibold text-sm">€ {Number(b.total_amount).toLocaleString('pt-BR')}</span>
-                      <Badge className={STATUS_COLORS[b.status] ?? ''}>{STATUS_LABELS[b.status] ?? b.status}</Badge>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(b)}><Pencil className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(b.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    <div className="mt-2 ml-6 sm:hidden">
+                      <span className="text-sm font-semibold">€ {Number(b.total_amount).toLocaleString('pt-BR')}</span>
                     </div>
                   </div>
                 ))}
