@@ -15,7 +15,9 @@ import {
   Users, Check, Euro, Calendar as CalendarIcon, Home,
   Waves, Bath, Sofa, ChevronRight, ChevronLeft,
   Wind, Mountain, Fish, Binoculars, Anchor, Car, Star, Loader2,
+  Landmark, CreditCard, Copy, CheckCircle2,
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // ─── Data ───────────────────────────────────────────────────────────────────
 
@@ -148,6 +150,10 @@ export function Packages() {
   // Form
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'card'>('bank_transfer');
+  const [wiseModalOpen, setWiseModalOpen] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [wiseConfig, setWiseConfig] = useState({ iban: '', bic: '', accountName: '' });
 
   // Supabase data
   const [coverImages, setCoverImages] = useState<Record<string, string>>({});
@@ -180,6 +186,24 @@ export function Packages() {
         })));
       }
     })();
+  }, []);
+
+  // Fetch Wise config from site_config
+  useEffect(() => {
+    supabase.from('site_config')
+      .select('key, value')
+      .in('key', ['wise_iban', 'wise_bic', 'wise_account_name'])
+      .then(({ data }) => {
+        if (data?.length) {
+          const cfg: Record<string, string> = {};
+          data.forEach(d => { cfg[d.key] = d.value; });
+          setWiseConfig({
+            iban: cfg.wise_iban ?? '',
+            bic: cfg.wise_bic ?? '',
+            accountName: cfg.wise_account_name ?? 'The Best of Angra',
+          });
+        }
+      });
   }, []);
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -244,14 +268,9 @@ export function Packages() {
       return `${t(ex.namePt, ex.nameEn, ex.nameEs, ex.nameFr)} (${qty}x) €${getExtraPrice(id)}`;
     }).filter(Boolean).join(', ');
 
-    const message = t(
-      `Pacote ${selectedPeople}px · ${selectedHouseData?.name} · Check-in: ${checkInDate ? format(checkInDate, 'dd/MM/yyyy') : 'a definir'} · Total: €${totalPrice}${extrasText ? ' · Extras: ' + extrasText : ''}`,
-      `Package ${selectedPeople}px · ${selectedHouseData?.name} · Check-in: ${checkInDate ? format(checkInDate, 'dd/MM/yyyy') : 'TBD'} · Total: €${totalPrice}${extrasText ? ' · Extras: ' + extrasText : ''}`,
-      `Paquete ${selectedPeople}px · ${selectedHouseData?.name} · Check-in: ${checkInDate ? format(checkInDate, 'dd/MM/yyyy') : 'a definir'} · Total: €${totalPrice}${extrasText ? ' · Extras: ' + extrasText : ''}`,
-      `Forfait ${selectedPeople}px · ${selectedHouseData?.name} · Arrivée: ${checkInDate ? format(checkInDate, 'dd/MM/yyyy') : 'à définir'} · Total: €${totalPrice}${extrasText ? ' · Extras: ' + extrasText : ''}`
-    );
+    const message = `Pacote ${selectedPeople}px · ${selectedHouseData?.name} · Check-in: ${checkInDate ? format(checkInDate, 'dd/MM/yyyy') : 'a definir'} · Total: €${totalPrice}${extrasText ? ' · Extras: ' + extrasText : ''}`;
 
-    // Save to contacts table
+    // Save lead to contacts table
     try {
       await supabase.from('contacts').insert({
         name: form.name,
@@ -265,11 +284,41 @@ export function Packages() {
       });
     } catch {}
 
-    // Open WhatsApp
-    const waMsg = `${t('Olá!', 'Hello!', '¡Hola!', 'Bonjour!')} ${form.name}.\n${message}`;
-    window.open(`https://wa.me/5524999999999?text=${encodeURIComponent(waMsg)}`, '_blank');
-    toast.success(t('Pré-reserva enviada! Redirecionando para WhatsApp...', 'Pre-booking sent! Redirecting to WhatsApp...', '¡Pre-reserva enviada! Redirigiendo a WhatsApp...', 'Pré-réservation envoyée! Redirection vers WhatsApp...'));
-    setSubmitting(false);
+    // ── Bank transfer (Wise) ─────────────────────────────────────────────────
+    if (paymentMethod === 'bank_transfer') {
+      toast.success(t('Pré-reserva registrada!', 'Pre-booking registered!', '¡Pre-reserva registrada!', 'Pré-réservation enregistrée!'));
+      setWiseModalOpen(true);
+      setSubmitting(false);
+      return;
+    }
+
+    // ── Card (Stripe) ────────────────────────────────────────────────────────
+    try {
+      const description = `The Best of Angra — ${selectedPeople}px · ${selectedHouseData?.name}${checkInDate ? ' · ' + format(checkInDate, 'dd/MM/yyyy') : ''}`;
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          amountEur: totalPrice,
+          customerName: form.name,
+          customerEmail: form.email || undefined,
+          description,
+          origin: window.location.origin,
+          metadata: {
+            house: selectedHouse,
+            people: String(selectedPeople),
+            checkIn: checkInDate ? format(checkInDate, 'yyyy-MM-dd') : '',
+            extras: extrasText || '',
+            phone: form.phone || '',
+          },
+        },
+      });
+      if (error || !data?.url) throw new Error(error?.message ?? 'Sem URL de pagamento');
+      toast.success(t('Redirecionando para pagamento seguro...', 'Redirecting to secure payment...', 'Redirigiendo al pago seguro...', 'Redirection vers le paiement sécurisé...'));
+      window.location.href = data.url;
+    } catch (err) {
+      console.error(err);
+      toast.error(t('Erro ao gerar link de pagamento. Tente novamente.', 'Error generating payment link. Please try again.', 'Error al generar el enlace de pago. Inténtelo de nuevo.', 'Erreur lors de la génération du lien de paiement. Réessayez.'));
+      setSubmitting(false);
+    }
   };
 
   // ─── Step labels ──────────────────────────────────────────────────────────
@@ -662,19 +711,60 @@ export function Packages() {
                       className="bg-white/10 border-white/30 text-white placeholder:text-white/50 focus:border-white"
                     />
                   </div>
+                  {/* Payment method selector */}
+                  <div className="space-y-2 pt-1">
+                    <p className="text-xs text-white/70 font-medium uppercase tracking-wide">
+                      {t('Forma de pagamento', 'Payment method', 'Método de pago', 'Mode de paiement')}
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('bank_transfer')}
+                        className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border text-xs font-medium transition-all ${
+                          paymentMethod === 'bank_transfer'
+                            ? 'bg-white text-primary border-white shadow-md'
+                            : 'bg-white/10 text-white/70 border-white/20 hover:bg-white/20'
+                        }`}
+                      >
+                        <Landmark className="w-5 h-5" />
+                        {t('Transferência', 'Bank Transfer', 'Transferencia', 'Virement')}
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${paymentMethod === 'bank_transfer' ? 'bg-green-100 text-green-700' : 'bg-white/10 text-white/50'}`}>
+                          {t('Sem taxas extras', 'No extra fees', 'Sin cargos extra', 'Sans frais')}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('card')}
+                        className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border text-xs font-medium transition-all ${
+                          paymentMethod === 'card'
+                            ? 'bg-white text-primary border-white shadow-md'
+                            : 'bg-white/10 text-white/70 border-white/20 hover:bg-white/20'
+                        }`}
+                      >
+                        <CreditCard className="w-5 h-5" />
+                        {t('Cartão', 'Credit Card', 'Tarjeta', 'Carte')}
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${paymentMethod === 'card' ? 'bg-orange-100 text-orange-700' : 'bg-white/10 text-white/50'}`}>
+                          {t('+2,9% Stripe', '+2.9% Stripe', '+2,9% Stripe', '+2,9% Stripe')}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
                   <Button
                     type="submit"
                     disabled={submitting}
                     size="lg"
                     className="w-full bg-white text-primary hover:bg-white/90 py-6 text-lg font-bold shadow-elegant hover:scale-105 active:scale-95 transition-all"
                   >
-                    {submitting
-                      ? <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                      : null}
-                    {t('Confirmar Pré-Reserva via WhatsApp', 'Confirm Pre-Booking via WhatsApp', 'Confirmar Pre-Reserva por WhatsApp', 'Confirmer la Pré-Réservation via WhatsApp')} →
+                    {submitting && <Loader2 className="w-5 h-5 animate-spin mr-2" />}
+                    {paymentMethod === 'bank_transfer'
+                      ? t(`Reservar e ver dados de pagamento`, `Reserve & see payment details`, `Reservar y ver datos de pago`, `Réserver et voir les détails`)
+                      : t(`Pagar €${totalPrice} com Cartão`, `Pay €${totalPrice} by Card`, `Pagar €${totalPrice} con Tarjeta`, `Payer €${totalPrice} par Carte`)} →
                   </Button>
                   <p className="text-xs text-white/60 text-center">
-                    {t('Nossa equipe responde em até 2 horas para confirmar disponibilidade.', 'Our team responds within 2 hours to confirm availability.', 'Nuestro equipo responde en 2 horas para confirmar disponibilidad.', 'Notre équipe répond dans 2 heures pour confirmer la disponibilité.')}
+                    {paymentMethod === 'bank_transfer'
+                      ? t('Transferência bancária SEPA — gratuita para clientes europeus.', 'SEPA bank transfer — free for European clients.', 'Transferencia bancaria SEPA — gratuita para clientes europeos.', 'Virement bancaire SEPA — gratuit pour les clients européens.')
+                      : t('Pagamento seguro via Stripe.', 'Secure payment via Stripe.', 'Pago seguro a través de Stripe.', 'Paiement sécurisé via Stripe.')}
                   </p>
                 </form>
               </Card>
@@ -725,5 +815,78 @@ export function Packages() {
         </div>
       )}
     </section>
+
+    {/* ── Wise bank transfer modal ──────────────────────────────────────── */}
+    {wiseModalOpen && (
+      <Dialog open={wiseModalOpen} onOpenChange={setWiseModalOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Landmark className="h-5 w-5 text-primary" />
+              {t('Dados para Transferência Bancária', 'Bank Transfer Details', 'Datos de Transferencia Bancaria', 'Coordonnées bancaires')}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              {t(
+                'Faça uma transferência SEPA com os dados abaixo. Após o envio, nos mande o comprovante pelo WhatsApp para confirmarmos a reserva.',
+                'Make a SEPA transfer using the details below. After sending, share the receipt on WhatsApp to confirm your booking.',
+                'Realiza una transferencia SEPA con los datos a continuación. Tras el envío, comparte el comprobante por WhatsApp para confirmar la reserva.',
+                'Effectuez un virement SEPA avec les coordonnées ci-dessous. Après l\'envoi, partagez le reçu sur WhatsApp pour confirmer votre réservation.',
+              )}
+            </p>
+
+            {/* Bank details rows */}
+            {[
+              { label: 'Beneficiário', value: wiseConfig.accountName || 'The Best of Angra' },
+              { label: 'IBAN', value: wiseConfig.iban || '— configure em Configurações —', copy: !!wiseConfig.iban },
+              { label: 'BIC / SWIFT', value: wiseConfig.bic || '— configure em Configurações —', copy: !!wiseConfig.bic },
+              { label: t('Valor', 'Amount', 'Monto', 'Montant'), value: `€ ${totalPrice}`, highlight: true },
+              { label: t('Referência', 'Reference', 'Referencia', 'Référence'), value: `${form.name} — The Best of Angra`, copy: true },
+            ].map(row => (
+              <div key={row.label} className={`flex items-center justify-between gap-3 p-3 rounded-lg ${row.highlight ? 'bg-primary/10 border border-primary/20' : 'bg-muted/60'}`}>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">{row.label}</p>
+                  <p className={`text-sm font-semibold truncate ${row.highlight ? 'text-primary text-base' : ''}`}>{row.value}</p>
+                </div>
+                {row.copy && (
+                  <button
+                    type="button"
+                    className="shrink-0 text-muted-foreground hover:text-primary transition-colors"
+                    onClick={() => {
+                      navigator.clipboard.writeText(row.value);
+                      setCopiedField(row.label);
+                      setTimeout(() => setCopiedField(null), 2000);
+                    }}
+                  >
+                    {copiedField === row.label
+                      ? <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      : <Copy className="h-4 w-4" />}
+                  </button>
+                )}
+              </div>
+            ))}
+
+            <a
+              href={`https://wa.me/5524999999999?text=${encodeURIComponent(
+                t(
+                  `Olá! Acabei de fazer a transferência para a reserva.\nNome: ${form.name}\nTotal: €${totalPrice}\nCasa: ${selectedHouseData?.name}\nCheck-in: ${checkInDate ? format(checkInDate, 'dd/MM/yyyy') : 'a definir'}`,
+                  `Hi! I just made the bank transfer for the booking.\nName: ${form.name}\nTotal: €${totalPrice}\nHouse: ${selectedHouseData?.name}\nCheck-in: ${checkInDate ? format(checkInDate, 'dd/MM/yyyy') : 'TBD'}`,
+                  `¡Hola! Acabo de realizar la transferencia para la reserva.\nNombre: ${form.name}\nTotal: €${totalPrice}\nCasa: ${selectedHouseData?.name}\nCheck-in: ${checkInDate ? format(checkInDate, 'dd/MM/yyyy') : 'a definir'}`,
+                  `Bonjour! Je viens d'effectuer le virement pour la réservation.\nNom: ${form.name}\nTotal: €${totalPrice}\nMaison: ${selectedHouseData?.name}\nCheck-in: ${checkInDate ? format(checkInDate, 'dd/MM/yyyy') : 'à définir'}`,
+                )
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold text-sm transition-colors"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              {t('Enviar comprovante no WhatsApp', 'Send receipt on WhatsApp', 'Enviar comprobante por WhatsApp', 'Envoyer le reçu sur WhatsApp')}
+            </a>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )}
   );
 }

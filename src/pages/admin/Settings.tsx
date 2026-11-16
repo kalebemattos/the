@@ -15,7 +15,7 @@ interface ConfigItem {
 }
 
 const KEY_LABELS: Record<string, string> = {
-  whatsapp_number: 'WhatsApp (com DDI)',
+  whatsapp_number: 'WhatsApp (com DDI, ex: +5524999999999)',
   contact_email: 'E-mail de contato',
   instagram_url: 'URL do Instagram',
   price_1p: 'Preço — 1 pessoa (€)',
@@ -24,6 +24,9 @@ const KEY_LABELS: Record<string, string> = {
   price_5p: 'Preço — 5 pessoas (€)',
   price_6p: 'Preço — 6 pessoas (€)',
   trip_duration_days: 'Duração do roteiro (dias)',
+  wise_iban: 'IBAN (Wise)',
+  wise_bic: 'BIC / SWIFT (Wise)',
+  wise_account_name: 'Nome do beneficiário (Wise)',
 };
 
 const CONFIG_GROUPS = [
@@ -35,6 +38,11 @@ const CONFIG_GROUPS = [
     title: 'Preços por Número de Pessoas (€)',
     description: 'Valor base do pacote por capacidade de hóspedes. Usado no wizard de reserva do site.',
     keys: ['price_1p', 'price_2p', 'price_4p', 'price_5p', 'price_6p'],
+  },
+  {
+    title: 'Pagamento — Wise',
+    description: 'IBAN da sua conta Wise em EUR. Exibido no site quando o cliente escolhe transferência bancária.',
+    keys: ['wise_iban', 'wise_bic', 'wise_account_name'],
   },
   {
     title: 'Roteiro',
