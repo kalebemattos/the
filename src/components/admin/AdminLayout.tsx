@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import logo from '@/assets/logo.png';
 
 export function AdminLayout() {
   const { user, loading, isAdminOrOperator, signOut } = useAuth();
@@ -66,9 +67,11 @@ export function AdminLayout() {
 
       {/* ── Mobile top header ── */}
       <header className="lg:hidden fixed top-0 left-0 right-0 h-14 z-40 bg-card border-b border-border flex items-center px-4 gap-3">
-        <div className="flex-1">
-          <span className="font-semibold text-foreground text-sm">Admin Panel</span>
-          <span className="text-xs text-muted-foreground capitalize ml-2">· {role}</span>
+        <div className="flex-1 flex items-center gap-2">
+          <div className="bg-ocean-deep rounded-md px-2 py-1">
+            <img src={logo} alt="The Best of Angra" className="h-7 w-auto" style={{ mixBlendMode: 'screen' }} />
+          </div>
+          <span className="text-xs text-muted-foreground capitalize">· {role}</span>
         </div>
         <Button variant="ghost" size="icon" onClick={signOut} title="Sair">
           <LogOut className="h-5 w-5" />
@@ -78,7 +81,9 @@ export function AdminLayout() {
       {/* ── Desktop sidebar ── */}
       <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-64 flex-col bg-card border-r border-border">
         <div className="p-6 border-b border-border">
-          <h1 className="text-xl font-bold text-foreground">Admin Panel</h1>
+          <div className="bg-ocean-deep rounded-lg px-3 py-2 mb-2 inline-flex">
+            <img src={logo} alt="The Best of Angra" className="h-10 w-auto" style={{ mixBlendMode: 'screen' }} />
+          </div>
           <p className="text-sm text-muted-foreground capitalize">{role}</p>
         </div>
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">

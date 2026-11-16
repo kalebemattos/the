@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
+import logo from '@/assets/logo.png';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido').max(255),
@@ -119,12 +120,17 @@ if (user && isAdminOrOperator) {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
+          <div className="flex justify-center mb-3">
+            <div className="bg-ocean-deep rounded-xl px-4 py-3">
+              <img src={logo} alt="The Best of Angra" className="h-14 w-auto" style={{ mixBlendMode: 'screen' }} />
+            </div>
+          </div>
           <CardTitle className="text-2xl font-bold">
             {isSignUp ? 'Criar Conta' : 'Área Administrativa'}
           </CardTitle>
           <CardDescription>
-            {isSignUp 
-              ? 'Preencha os dados para solicitar acesso' 
+            {isSignUp
+              ? 'Preencha os dados para solicitar acesso'
               : 'Entre com suas credenciais para acessar o painel'}
           </CardDescription>
         </CardHeader>

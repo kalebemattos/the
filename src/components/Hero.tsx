@@ -2,6 +2,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { ChevronDown } from 'lucide-react';
 import heroImage from '@/assets/hero-angra.jpg';
+import logo from '@/assets/logo.png';
 import { LanguageToggle } from './LanguageToggle';
 
 export function Hero() {
@@ -24,12 +25,12 @@ export function Hero() {
 
       {/* Logo - Top Left */}
       <div className="absolute top-6 left-6 z-20">
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 hover:bg-white/20 transition-all">
-          <div className="text-white font-display text-xl font-bold tracking-wider">
-            {/* Adicione sua logo aqui */}
-            <span className="text-secondary">■</span> ANGRA
-          </div>
-        </div>
+        <img
+          src={logo}
+          alt="The Best of Angra"
+          className="h-14 w-auto"
+          style={{ mixBlendMode: 'screen' }}
+        />
       </div>
 
       {/* Language Toggle - Top Right */}
@@ -40,12 +41,10 @@ export function Hero() {
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4">
         <div className="animate-fade-in-up">
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <span className="text-secondary text-3xl">■</span>
+          <div className="flex items-center justify-center mb-6">
             <h1 className="hero-title">
               THE BEST OF ANGRA
             </h1>
-            <span className="text-secondary text-3xl">■</span>
           </div>
           
           <p className="hero-subtitle text-xl md:text-2xl mb-4 max-w-3xl mx-auto">

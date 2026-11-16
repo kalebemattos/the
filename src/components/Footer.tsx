@@ -1,5 +1,6 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Instagram, Mail, MessageCircle, MapPin, Phone } from 'lucide-react';
+import logo from '@/assets/logo.png';
 
 export function Footer() {
   const { t } = useLanguage();
@@ -16,9 +17,13 @@ export function Footer() {
 
           {/* Brand — 5 cols */}
           <div className="md:col-span-5">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-primary text-xl">■</span>
-              <span className="text-2xl font-bold tracking-tight">The Best of Angra</span>
+            <div className="mb-4">
+              <img
+                src={logo}
+                alt="The Best of Angra"
+                className="h-20 w-auto"
+                style={{ mixBlendMode: 'screen' }}
+              />
             </div>
             <p className="text-white/60 leading-relaxed text-sm max-w-xs">
               {t(
